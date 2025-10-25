@@ -3,46 +3,56 @@ setlocal enabledelayedexpansion
 title Winfig Unattend.xml Setup Utility
 cls
 
-echo ============================================================
-echo               Winfig Unattend.xml Setup Tool
-echo ============================================================
+REM ============================================
+REM ANSI color setup
+REM ============================================
+for /f "delims=" %%A in ('echo prompt $E^| cmd') do set "ESC=%%A"
+set "COLOR_INFO=%ESC%[96m"
+set "COLOR_OK=%ESC%[92m"
+set "COLOR_WARN=%ESC%[93m"
+set "COLOR_ERR=%ESC%[91m"
+set "COLOR_TITLE=%ESC%[95m"
+set "COLOR_RESET=%ESC%[0m"
+
+echo %COLOR_TITLE%============================================================%COLOR_RESET%
+echo %COLOR_TITLE%              Winfig Unattend.xml Setup Tool%COLOR_RESET%
+echo %COLOR_TITLE%============================================================%COLOR_RESET%
 echo.
 
 REM ============================================
-REM Step 1: Download Unattend.xml template
+REM Step 1: Download Unattend.xml
 REM ============================================
 
-echo [i] Downloading unattend.xml template...
+echo %COLOR_INFO%[i] Downloading unattend.xml template...%COLOR_RESET%
 curl -L https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/unattend.xml -o unattend.xml >nul 2>&1
 
 if %ERRORLEVEL% NEQ 0 (
-    echo [x] Failed to download unattend.xml
+    echo %COLOR_ERR%[x] Failed to download unattend.xml%COLOR_RESET%
     exit /b 1
 )
-echo [+] Successfully downloaded unattend.xml
+echo %COLOR_OK%[+] Successfully downloaded unattend.xml%COLOR_RESET%
 echo.
 
 REM ============================================
-REM Step 2: Backup original Unattend.xml
+REM Step 2: Backup
 REM ============================================
 
-echo [i] Creating backup of unattend.xml...
+echo %COLOR_INFO%[i] Creating backup of unattend.xml...%COLOR_RESET%
 copy unattend.xml unattend.xml.bak >nul 2>&1
 
 if %ERRORLEVEL% NEQ 0 (
-    echo [x] Failed to create backup of unattend.xml
+    echo %COLOR_ERR%[x] Failed to create backup of unattend.xml%COLOR_RESET%
     exit /b 1
 )
-echo [+] Backup created: unattend.xml.bak
+echo %COLOR_OK%[+] Backup created: unattend.xml.bak%COLOR_RESET%
 echo.
 
 REM ============================================
-REM Step 3: Get user input
+REM Step 3: User Input
 REM ============================================
 
-echo [i] Please enter configuration details below.
+echo %COLOR_INFO%[i] Please enter configuration details below.%COLOR_RESET%
 echo.
-
 set /p USERNAME="Enter username: "
 set /p PASSWORD="Enter password: "
 set /p DISPLAY="Enter Display name: "
@@ -58,78 +68,65 @@ if "%GROUP%"=="1" (
 ) else if "%GROUP%"=="2" (
     set GROUP=Users
 ) else (
-    echo [!] Invalid selection. Defaulting to 'Users'.
+    echo %COLOR_WARN%[!] Invalid selection. Defaulting to 'Users'.%COLOR_RESET%
     set GROUP=Users
 )
-echo [+] User group set to: !GROUP!
+echo %COLOR_OK%[+] User group set to: !GROUP!%COLOR_RESET%
 echo.
 
 REM ============================================
-REM Step 4: Modify Unattend.xml
+REM Step 4: Modify XML
 REM ============================================
 
-echo [i] Updating unattend.xml with user-provided values...
+echo %COLOR_INFO%[i] Updating unattend.xml with user-provided values...%COLOR_RESET%
 powershell -Command "(Get-Content unattend.xml) -replace 'DummyUser', '%USERNAME%' | Set-Content unattend.xml"
 powershell -Command "(Get-Content unattend.xml) -replace 'DummyPassword123!', '%PASSWORD%' | Set-Content unattend.xml"
 powershell -Command "(Get-Content unattend.xml) -replace 'DummyComputer', '%DISPLAY%' | Set-Content unattend.xml"
 powershell -Command "(Get-Content unattend.xml) -replace 'UserSelection', '%GROUP%' | Set-Content unattend.xml"
 
 if %ERRORLEVEL% NEQ 0 (
-    echo [x] Failed to modify unattend.xml
+    echo %COLOR_ERR%[x] Failed to modify unattend.xml%COLOR_RESET%
     exit /b 1
 )
-echo [+] unattend.xml updated successfully
+echo %COLOR_OK%[+] unattend.xml updated successfully%COLOR_RESET%
 echo.
 
 REM ============================================
-REM Step 5: Verify replacements
+REM Step 5: Verify
 REM ============================================
 
-echo [i] Verifying changes in unattend.xml...
-findstr /C:"%USERNAME%" unattend.xml >nul || (echo [x] Username not found. & exit /b 1)
-findstr /C:"%PASSWORD%" unattend.xml >nul || (echo [x] Password not found. & exit /b 1)
-findstr /C:"%DISPLAY%" unattend.xml >nul || (echo [x] Display name not found. & exit /b 1)
-findstr /C:"%GROUP%" unattend.xml >nul || (echo [x] Group not found. & exit /b 1)
-echo [+] Verification passed — all values correctly replaced
+echo %COLOR_INFO%[i] Verifying changes in unattend.xml...%COLOR_RESET%
+findstr /C:"%USERNAME%" unattend.xml >nul || (echo %COLOR_ERR%[x] Username not found.%COLOR_RESET% & exit /b 1)
+findstr /C:"%PASSWORD%" unattend.xml >nul || (echo %COLOR_ERR%[x] Password not found.%COLOR_RESET% & exit /b 1)
+findstr /C:"%DISPLAY%" unattend.xml >nul || (echo %COLOR_ERR%[x] Display name not found.%COLOR_RESET% & exit /b 1)
+findstr /C:"%GROUP%" unattend.xml >nul || (echo %COLOR_ERR%[x] Group not found.%COLOR_RESET% & exit /b 1)
+echo %COLOR_OK%[+] Verification passed — all values correctly replaced%COLOR_RESET%
 echo.
 
 REM ============================================
-REM Step 6: Copy to Windows setup directory
+REM Step 6: Copy to Panther
 REM ============================================
 
-echo [i] Copying unattend.xml to C:\Windows\Panther...
+echo %COLOR_INFO%[i] Copying unattend.xml to C:\Windows\Panther...%COLOR_RESET%
 if not exist C:\Windows\Panther mkdir C:\Windows\Panther
 copy unattend.xml C:\Windows\Panther >nul 2>&1
 
 if %ERRORLEVEL% NEQ 0 (
-    echo [x] Failed to copy unattend.xml to C:\Windows\Panther
+    echo %COLOR_ERR%[x] Failed to copy unattend.xml to C:\Windows\Panther%COLOR_RESET%
     exit /b 1
 )
-echo [+] unattend.xml copied successfully
+echo %COLOR_OK%[+] unattend.xml copied successfully%COLOR_RESET%
 echo.
 
-REM ============================================
-REM Step 7: Cleanup
-REM ============================================
-
-echo [i] Cleaning up temporary files...
-del unattend.xml >nul 2>&1
-
-if %ERRORLEVEL% NEQ 0 (
-    echo [!] Warning: Could not delete unattend.xml (may not exist)
-) else (
-    echo [+] Temporary unattend.xml removed
-)
-echo.
 
 REM ============================================
-REM Step 8: Run Sysprep
+REM Step 8: Sysprep
 REM ============================================
 
-echo ============================================================
-echo [!] WARNING: System will reboot in 5 seconds after applying unattend.xml
-echo     Press Ctrl+C now to cancel this operation.
-echo ============================================================
+echo %COLOR_TITLE%============================================================%COLOR_RESET%
+echo %COLOR_WARN%[!] WARNING: System will reboot in 5 seconds after applying unattend.xml%COLOR_RESET%
+echo %COLOR_INFO%    Press Ctrl+C now to cancel this operation.%COLOR_RESET%
+echo %COLOR_TITLE%============================================================%COLOR_RESET%
 timeout /t 5 /nobreak >nul
-echo [i] Running Sysprep... please wait.
+echo %COLOR_INFO%[i] Running Sysprep... please wait.%COLOR_RESET%
 %WINDIR%\System32\Sysprep\Sysprep.exe /oobe /unattend:C:\Windows\Panther\unattend.xml /reboot
