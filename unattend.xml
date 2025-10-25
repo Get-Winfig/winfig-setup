@@ -198,7 +198,6 @@ Configuration includes:
 			</FirstLogonCommands>
 		</component>
 	</settings>
-	</settings>
 
 	<!-- ===================================================================== -->
 	<!-- EXTENSIONS SECTION - EMBEDDED POWERSHELL SCRIPTS                     -->

@@ -47,23 +47,29 @@ if "%GROUPCHOICE%"=="3" set USERGROUP=UserSelection
 echo.
 echo Customizing unattend.xml with your settings...
 
-REM Step 3: Replace values using inline CMD processing
-setlocal EnableDelayedExpansion
-set "input=unattend.xml"
-set "output=edit-unattended.xml"
+REM Step 3: Create PowerShell script for processing (more reliable for special characters)
+echo $input = 'unattend.xml' > process.ps1
+echo $output = 'edit-unattended.xml' >> process.ps1
+echo $username = '%USERNAME%' >> process.ps1
+echo $displayname = '%DISPLAYNAME%' >> process.ps1
+echo $password = '%PASSWORD%' >> process.ps1
+echo $usergroup = '%USERGROUP%' >> process.ps1
+echo. >> process.ps1
+echo # Read file, remove comments, and replace values >> process.ps1
+echo $content = Get-Content $input -Raw >> process.ps1
+echo # Remove XML comments >> process.ps1
+echo $content = $content -replace '(?s)<!--.*?-->', '' >> process.ps1
+echo # Replace placeholder values >> process.ps1
+echo $content = $content -replace 'DummyUser', $username >> process.ps1
+echo $content = $content -replace 'Dummy User', $displayname >> process.ps1
+echo $content = $content -replace 'DummyPassword123!', $password >> process.ps1
+echo $content = $content -replace 'UserSelection', $usergroup >> process.ps1
+echo # Clean up extra whitespace from comment removal >> process.ps1
+echo $content = $content -replace '(?m)^\s*$\n', '' >> process.ps1
+echo Set-Content $output $content -Encoding UTF8 >> process.ps1
 
-REM Clear output file if it exists
-if exist "!output!" echo. > "!output!"
-
-REM Process each line and perform replacements
-for /f "usebackq delims=" %%a in ("!input!") do (
-    set "line=%%a"
-    set "line=!line:DummyUser=%USERNAME%!"
-    set "line=!line:Dummy User=%DISPLAYNAME%!"
-    set "line=!line:DummyPassword123!=%PASSWORD%!"
-    set "line=!line:UserSelection=%USERGROUP%!"
-    echo(!line! >> "!output!"
-)
+REM Execute PowerShell script
+powershell -ExecutionPolicy Bypass -File process.ps1
 
 REM Step 4: Copy to final location
 REM Ensure the Panther directory exists
