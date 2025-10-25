@@ -134,7 +134,7 @@ Configuration includes:
 					</Name>
 					<!-- DISPLAY NAME: Will be replaced by bypass.cmd -->
 					<DisplayName>
-						Dummy User
+						DummyComputer
 					</DisplayName>
 					<!-- USER GROUP: Will be replaced by bypass.cmd -->
 					<!-- Options: Administrators, Users, or UserSelection -->

@@ -1,99 +1,134 @@
 @echo off
+setlocal enabledelayedexpansion
+title Winfig Unattend.xml Setup Utility
+
+echo ============================================================
+echo               Winfig Unattend.xml Setup Tool
+echo ============================================================
+echo.
 
 REM ============================================
-REM Winfig Windows 11 Bypass Script
+REM Step 1: Download Unattend.xml template
 REM ============================================
 
-REM Step 1: Download
-REM Download the unattend.xml file from the GitHub repository to current directory
-echo Step 1: Downloading unattend.xml configuration file...
-curl -L https://raw.githubusercontent.com/Get-Winfig/winfig-setup/refs/heads/main/unattend.xml -o unattend.xml
-if not exist unattend.xml (
-    echo ERROR: Failed to download unattend.xml file
-    pause
+echo [i] Downloading unattend.xml template...
+curl -L https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/unattend.xml -o unattend.xml >nul 2>&1
+
+if %ERRORLEVEL% NEQ 0 (
+    echo [x] Failed to download unattend.xml
     exit /b 1
 )
-
-REM Step 2: Customize User Settings
-echo.
-echo Step 2: Customizing user account settings...
-echo Please provide your custom user account details:
+echo [+] Successfully downloaded unattend.xml
 echo.
 
-REM Ask for username
-set /p "USERNAME=Enter your desired username (default: Admin): "
-if "%USERNAME%"=="" set USERNAME=Admin
+REM ============================================
+REM Step 2: Backup original Unattend.xml
+REM ============================================
 
-REM Ask for display name
-set /p "DISPLAYNAME=Enter display name (default: %USERNAME%): "
-if "%DISPLAYNAME%"=="" set DISPLAYNAME=%USERNAME%
+echo [i] Creating backup of unattend.xml...
+copy unattend.xml unattend.xml.bak >nul 2>&1
 
-REM Ask for password
-set /p "PASSWORD=Enter your password (default: Password123!): "
-if "%PASSWORD%"=="" set PASSWORD=Password123!
-
-REM Ask for user group
-echo.
-echo Choose user group:
-echo 1. Administrators (recommended)
-echo 2. Users
-echo 3. UserSelection (custom)
-set /p "GROUPCHOICE=Select group (1-3, default: 1): "
-if "%GROUPCHOICE%"=="" set GROUPCHOICE=1
-if "%GROUPCHOICE%"=="1" set USERGROUP=Administrators
-if "%GROUPCHOICE%"=="2" set USERGROUP=Users
-if "%GROUPCHOICE%"=="3" set USERGROUP=UserSelection
-
-echo.
-echo Customizing unattend.xml with your settings...
-
-REM Step 3: Replace values using inline CMD processing
-setlocal EnableDelayedExpansion
-set "input=unattend.xml"
-set "output=edit-unattended.xml"
-
-REM Clear output file if it exists
-if exist "!output!" echo. > "!output!"
-
-REM Process each line and perform replacements
-for /f "usebackq delims=" %%a in ("!input!") do (
-    set "line=%%a"
-    set "line=!line:DummyUser=%USERNAME%!"
-    set "line=!line:Dummy User=%DISPLAYNAME%!"
-    call :ReplacePassword "!line!" "!output!"
-    set "line=!RESULT!"
-    set "line=!line:UserSelection=%USERGROUP%!"
-    echo(!line! >> "!output!"
+if %ERRORLEVEL% NEQ 0 (
+    echo [x] Failed to create backup of unattend.xml
+    exit /b 1
 )
-goto :ContinueScript
-
-:ReplacePassword
-setlocal DisableDelayedExpansion
-set "line=%~1"
-set "line=%line:DummyPassword123!=%PASSWORD%"
-endlocal & set "RESULT=%line%"
-goto :eof
-
-:ContinueScript
-
-REM Step 4: Copy to final location
-REM Ensure the Panther directory exists
-if not exist C:\Windows\Panther mkdir C:\Windows\Panther
-echo Step 3: Copying customized configuration file to C:\Windows\Panther\
-copy edit-unattended.xml C:\Windows\Panther\unattend.xml
-
-echo Step 3a: Customized file saved as 'edit-unattended.xml' in current directory
-echo Step 3b: File copied and renamed to 'C:\Windows\Panther\unattend.xml'
-
-REM Step 5: Prepare
-REM Prepare the system using Sysprep with the unattend configuration
-echo Step 4: Preparing system with bypass configuration...
-
-REM Step 6: Reboot
-REM Execute Sysprep and automatically reboot the system
-echo Step 5: Rebooting system to apply changes...
+echo [+] Backup created: unattend.xml.bak
 echo.
-echo WARNING: The system will reboot in 5 seconds!
-echo Press Ctrl+C to cancel...
+
+REM ============================================
+REM Step 3: Get user input
+REM ============================================
+
+echo [i] Please enter configuration details below.
+echo.
+
+set /p USERNAME="Enter username: "
+set /p PASSWORD="Enter password: "
+set /p DISPLAY="Enter Display name: "
+
+echo.
+echo Select User group:
+echo   1. Administrators
+echo   2. Users
+set /p GROUP="Enter User group (1/2): "
+
+if "%GROUP%"=="1" (
+    set GROUP=Administrators
+) else if "%GROUP%"=="2" (
+    set GROUP=Users
+) else (
+    echo [!] Invalid selection. Defaulting to 'Users'.
+    set GROUP=Users
+)
+echo [+] User group set to: !GROUP!
+echo.
+
+REM ============================================
+REM Step 4: Modify Unattend.xml
+REM ============================================
+
+echo [i] Updating unattend.xml with user-provided values...
+powershell -Command "(Get-Content unattend.xml) -replace 'DummyUser', '%USERNAME%' | Set-Content unattend.xml"
+powershell -Command "(Get-Content unattend.xml) -replace 'DummyPassword123!', '%PASSWORD%' | Set-Content unattend.xml"
+powershell -Command "(Get-Content unattend.xml) -replace 'DummyComputer', '%DISPLAY%' | Set-Content unattend.xml"
+powershell -Command "(Get-Content unattend.xml) -replace 'UserSelection', '%GROUP%' | Set-Content unattend.xml"
+
+if %ERRORLEVEL% NEQ 0 (
+    echo [x] Failed to modify unattend.xml
+    exit /b 1
+)
+echo [+] unattend.xml updated successfully
+echo.
+
+REM ============================================
+REM Step 5: Verify replacements
+REM ============================================
+
+echo [i] Verifying changes in unattend.xml...
+findstr /C:"%USERNAME%" unattend.xml >nul || (echo [x] Username not found. & exit /b 1)
+findstr /C:"%PASSWORD%" unattend.xml >nul || (echo [x] Password not found. & exit /b 1)
+findstr /C:"%DISPLAY%" unattend.xml >nul || (echo [x] Display name not found. & exit /b 1)
+findstr /C:"%GROUP%" unattend.xml >nul || (echo [x] Group not found. & exit /b 1)
+echo [+] Verification passed — all values correctly replaced
+echo.
+
+REM ============================================
+REM Step 6: Copy to Windows setup directory
+REM ============================================
+
+echo [i] Copying unattend.xml to C:\Windows\Panther...
+if not exist C:\Windows\Panther mkdir C:\Windows\Panther
+copy unattend.xml C:\Windows\Panther >nul 2>&1
+
+if %ERRORLEVEL% NEQ 0 (
+    echo [x] Failed to copy unattend.xml to C:\Windows\Panther
+    exit /b 1
+)
+echo [+] unattend.xml copied successfully
+echo.
+
+REM ============================================
+REM Step 7: Cleanup
+REM ============================================
+
+echo [i] Cleaning up temporary files...
+del unattend.xml >nul 2>&1
+
+if %ERRORLEVEL% NEQ 0 (
+    echo [!] Warning: Could not delete unattend.xml (may not exist)
+) else (
+    echo [+] Temporary unattend.xml removed
+)
+echo.
+
+REM ============================================
+REM Step 8: Run Sysprep
+REM ============================================
+
+echo ============================================================
+echo [!] WARNING: System will reboot in 5 seconds after applying unattend.xml
+echo     Press Ctrl+C now to cancel this operation.
+echo ============================================================
 timeout /t 5 /nobreak >nul
+echo [i] Running Sysprep... please wait.
 %WINDIR%\System32\Sysprep\Sysprep.exe /oobe /unattend:C:\Windows\Panther\unattend.xml /reboot
