@@ -1,6 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 title Winfig Unattend.xml Setup Utility
+cls
 
 echo ============================================================
 echo               Winfig Unattend.xml Setup Tool
