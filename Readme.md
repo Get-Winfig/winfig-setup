@@ -6,6 +6,10 @@ This repository contains the setup files and helpful resources for installing Wi
 
 > **📘 Complete Documentation**: For comprehensive guides, tutorials, and detailed information about Winfig, please visit our [official documentation website](https://get-winfig.github.io/winfig-docs/).
 
+> Portions of this setup and approach are adapted from [Chris Titus Tech](https://christitus.com/).
+
+> Full credit to his work on Windows installation automation.
+
 ---
 
 ## 🚀 Requirements
@@ -14,9 +18,21 @@ Before you begin the setup process, ensure you have the following prerequisites:
 - **USB Drive**: A USB drive with at least 8GB of storage
 - **Working Internet Connection**: Required for downloading necessary files
 
-> **📋 Detailed Instructions**: Complete setup instructions are available in our [documentation](https://get-winfig.github.io/winfig-docs/).
+> **📋 Detailed Instructions**: For more advanced configurations and troubleshooting, visit our [documentation](https://get-winfig.github.io/winfig-docs/).
 
 ---
+
+## ⚡️ Oneliner Setup
+Follow these steps to set up Windows 11 using Winfig:
+
+1. **Prepare** your installation media (USB drive with Windows 11 ISO)
+2. **Boot** from the USB drive
+3. **Open** Command Prompt (Shift + F10)
+4. **Run** the bypass command:
+   ```cmd
+   curl -L https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/bypass.cmd -o bypass.cmd
+   ```
+5. **Complete** the Windows installation
 
 ## 🤝 Contributing
 
