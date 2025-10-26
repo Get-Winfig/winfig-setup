@@ -9,12 +9,6 @@
 #   Safe for debloating and improving system performance.
 # =================================================================
 
-# Ensure running as Administrator
-if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole('Administrator')) {
-    Write-Host "[x] Please run this script as Administrator!" -ForegroundColor Red
-    exit
-}
-
 # Create log directory
 $LogDir = "C:\Winfig-Logs"
 if (-not (Test-Path $LogDir)) {

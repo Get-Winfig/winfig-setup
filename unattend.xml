@@ -158,6 +158,11 @@ Notes:
 					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Verb RunAs -Command "Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/RemoveCapabilities.ps1" | Invoke-Expression'; pause"</CommandLine>
 					<Description>Remove Unwanted Windows Capabilities</Description>
 				</SynchronousCommand>
+				<SynchronousCommand wcm:action="add">
+					<Order>3</Order>
+					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Verb RunAs -Command "Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/SetStartPins.ps1" | Invoke-Expression'; pause"</CommandLine>
+					<Description>Set Start Menu Pins</Description>
+				</SynchronousCommand>
 			</FirstLogonCommands>
 		</component>
     </settings>
