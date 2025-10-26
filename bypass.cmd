@@ -48,63 +48,92 @@ echo %COLOR_OK%[+] Backup created: unattend.xml.bak%COLOR_RESET%
 echo.
 
 REM ============================================
-REM Step 3: User Input
+REM Step 3: User Input (ask then replace each)
 REM ============================================
 
 echo %COLOR_INFO%[i] Please enter configuration details below.%COLOR_RESET%
 echo.
-set /p USERNAME="Enter username: "
-set /p PASSWORD="Enter password: "
-set /p DISPLAY="Enter Display name: "
 
-echo.
+:: USERNAME
+set /p USERNAME="Enter username: "
+if "%USERNAME%"=="" (
+    echo %COLOR_WARN%[!] No username entered. Aborting.%COLOR_RESET%
+    exit /b 1
+)
+
+:: PASSWORD
+set /p PASSWORD="Enter password: "
+if "!PASSWORD!"=="" (
+    echo %COLOR_WARN%[!] No password entered. Aborting.%COLOR_RESET%
+    exit /b 1
+)
+
+:: DISPLAY NAME
+set /p DISPLAY="Enter Display name: "
+if "!DISPLAY!"=="" (
+    echo %COLOR_WARN%[!] No display name entered. Aborting.%COLOR_RESET%
+    exit /b 1
+)
+
+:: GROUP
 echo Select User group:
 echo   1. Administrators
 echo   2. Users
 set /p GROUP="Enter User group (1/2): "
-
 if "%GROUP%"=="1" (
-    set GROUP=Administrators
+    set "GROUP=Administrators"
 ) else if "%GROUP%"=="2" (
-    set GROUP=Users
+    set "GROUP=Users"
 ) else (
     echo %COLOR_WARN%[!] Invalid selection. Defaulting to 'Users'.%COLOR_RESET%
-    set GROUP=Users
+    set "GROUP=Users"
 )
-echo %COLOR_OK%[+] User group set to: !GROUP!%COLOR_RESET%
-echo.
 
-REM ============================================
-REM Step 4: Modify XML
-REM ============================================
+REM Save inputs to JSON file
+echo %COLOR_INFO%[i] Saving configuration to JSON file...%COLOR_RESET%
+echo { > config.json
+echo   "username": "!USERNAME!", >> config.json
+echo   "password": "!PASSWORD!", >> config.json
+echo   "displayname": "!DISPLAY!", >> config.json
+echo   "group": "!GROUP!" >> config.json
+echo } >> config.json
 
-echo %COLOR_INFO%[i] Updating unattend.xml with user-provided values...%COLOR_RESET%
-powershell -Command "(Get-Content unattend.xml) -replace 'DummyUser', '%USERNAME%' | Set-Content unattend.xml"
-powershell -Command "(Get-Content unattend.xml) -replace 'DummyPassword123!', '%PASSWORD%' | Set-Content unattend.xml"
-powershell -Command "(Get-Content unattend.xml) -replace 'DummyComputer', '%DISPLAY%' | Set-Content unattend.xml"
-powershell -Command "(Get-Content unattend.xml) -replace 'UserSelection', '%GROUP%' | Set-Content unattend.xml"
+REM Use PowerShell to read JSON and replace all values at once
+echo %COLOR_INFO%[i] Processing replacements...%COLOR_RESET%
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$config = Get-Content 'config.json' | ConvertFrom-Json; $content = Get-Content 'unattend.xml' -Raw; $content = $content -replace 'DummyUser', $config.username; $content = $content -replace 'DummyComputer', $config.displayname; $content = $content -replace 'DummyPassword123!', $config.password; $content = $content -replace 'UserSelection', $config.group; Set-Content 'unattend.xml' $content -Encoding UTF8"
 
 if %ERRORLEVEL% NEQ 0 (
-    echo %COLOR_ERR%[x] Failed to modify unattend.xml%COLOR_RESET%
+    echo %COLOR_ERR%[x] Replacement processing failed.%COLOR_RESET%
     exit /b 1
 )
-echo %COLOR_OK%[+] unattend.xml updated successfully%COLOR_RESET%
+
+REM Clean up JSON file
+if exist config.json del config.json
+
+echo %COLOR_OK%[+] All replacements completed successfully.%COLOR_RESET%
 echo.
 
 REM ============================================
-REM Step 5: Verify
+REM Step 4: Verify
 REM ============================================
 
 echo %COLOR_INFO%[i] Verifying changes in unattend.xml...%COLOR_RESET%
-findstr /C:"%USERNAME%" unattend.xml >nul || (echo %COLOR_ERR%[x] Username not found.%COLOR_RESET% & exit /b 1)
-findstr /C:"%PASSWORD%" unattend.xml >nul || (echo %COLOR_ERR%[x] Password not found.%COLOR_RESET% & exit /b 1)
-findstr /C:"%DISPLAY%" unattend.xml >nul || (echo %COLOR_ERR%[x] Display name not found.%COLOR_RESET% & exit /b 1)
-findstr /C:"%GROUP%" unattend.xml >nul || (echo %COLOR_ERR%[x] Group not found.%COLOR_RESET% & exit /b 1)
+echo %COLOR_INFO%[i] Values entered:%COLOR_RESET%
+echo %COLOR_OK%    Username: %COLOR_RESET%!USERNAME!
+echo %COLOR_OK%    Display : %COLOR_RESET%!DISPLAY!
+echo %COLOR_OK%    Group   : %COLOR_RESET%!GROUP!
+echo %COLOR_OK%    Password: %COLOR_RESET%!PASSWORD!
+echo.
+
+findstr /C:"!USERNAME!" unattend.xml >nul || (echo %COLOR_ERR%[x] Username not found.%COLOR_RESET% & exit /b 1)
+findstr /C:"!PASSWORD!" unattend.xml >nul || (echo %COLOR_ERR%[x] Password not found.%COLOR_RESET% & exit /b 1)
+findstr /C:"!DISPLAY!" unattend.xml >nul || (echo %COLOR_ERR%[x] Display name not found.%COLOR_RESET% & exit /b 1)
+findstr /C:"!GROUP!" unattend.xml >nul || (echo %COLOR_ERR%[x] Group not found.%COLOR_RESET% & exit /b 1)
 echo %COLOR_OK%[+] Verification passed — all values correctly replaced%COLOR_RESET%
 echo.
 
 REM ============================================
-REM Step 6: Copy to Panther
+REM Step 5: Copy to Panther
 REM ============================================
 
 echo %COLOR_INFO%[i] Copying unattend.xml to C:\Windows\Panther...%COLOR_RESET%
@@ -120,7 +149,7 @@ echo.
 
 
 REM ============================================
-REM Step 8: Sysprep
+REM Step 6: Sysprep
 REM ============================================
 
 echo %COLOR_TITLE%============================================================%COLOR_RESET%
@@ -130,3 +159,4 @@ echo %COLOR_TITLE%============================================================%C
 timeout /t 5 /nobreak >nul
 echo %COLOR_INFO%[i] Running Sysprep... please wait.%COLOR_RESET%
 %WINDIR%\System32\Sysprep\Sysprep.exe /oobe /unattend:C:\Windows\Panther\unattend.xml /reboot
+exit /b 0
