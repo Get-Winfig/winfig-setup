@@ -1,192 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
-<unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
-    <!-- ============================================ -->
-    <!-- OFFLINE SERVICING PASS -->
-    <!-- Runs before Windows installation begins -->
-    <!-- ============================================ -->
-    <settings pass="offlineServicing"></settings>
+<!--
+Unattended Windows 11 installation configuration.
+Version: 2.0.0
+Author: Armoghan-ul-Mohmin
+Purpose:
+- Automate a repeatable, zero‑touch Windows 11 deployment.
 
-    <!-- ============================================ -->
-    <!-- WINDOWS PE PASS -->
-    <!-- Runs during Windows PE boot phase -->
-    <!-- ============================================ -->
+Contents:
+- Local user account creation and initial account settings.
+- OOBE (Out‑Of‑Box Experience) customization and privacy/telemetry defaults.
+- First‑login provisioning scripts for post‑install cleanup and package removal (debloat).
+- Registry changes and UI customizations (taskbar, Explorer, etc.).
+- Performance and security optimizations.
+- Removal or disablement of unwanted services and optional Windows features.
+
+Notes:
+- Validate all changes in a test environment before production use.
+- Maintain backups of original configuration and document environment‑specific adjustments.
+- Registry edits and component removals may affect system behavior and updates; proceed with caution.
+-->
+
+<unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+
     <settings pass="windowsPE">
-        <component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
-            <UserData>
-                <ProductKey>
-                    <!-- Generic Windows 11 Pro key - requires separate activation -->
-                    <Key>VK7JG-NPHTM-C97JM-9MPGT-3V66T</Key>
-                    <WillShowUI>OnError</WillShowUI>
-                </ProductKey>
-                <AcceptEula>true</AcceptEula>
-            </UserData>
-            <UseConfigurationSet>false</UseConfigurationSet>
-        </component>
+        <component name="Microsoft-Windows-Setup">
+			<UserData>
+				<ProductKey>VK7JG-NPHTM-C97JM-9MPGT-3V66T
+					<WillShowUI>OnError</WillShowUI>
+				</ProductKey>
+				<AcceptEula>true</AcceptEula>
+			</UserData>
+			<UseConfigurationSet>false</UseConfigurationSet>
+		</component>
     </settings>
 
-    <!-- ============================================ -->
-    <!-- GENERALIZE PASS -->
-    <!-- Runs during sysprep generalize phase -->
-    <!-- ============================================ -->
+    <settings pass="offlineServicing"></settings>
     <settings pass="generalize"></settings>
 
-    <!-- ============================================ -->
-    <!-- SPECIALIZE PASS -->
-    <!-- Runs during system specialization -->
-    <!-- ============================================ -->
     <settings pass="specialize">
         <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
-            <RunSynchronous>
-                <!-- Enable long file paths -->
-                <RunSynchronousCommand wcm:action="add">
-                    <Order>1</Order>
-                    <Path>reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f</Path>
-                </RunSynchronousCommand>
-                <!-- Set passwords to never expire -->
-                <RunSynchronousCommand wcm:action="add">
-                    <Order>2</Order>
-                    <Path>net.exe accounts /maxpwage:UNLIMITED</Path>
-                </RunSynchronousCommand>
-                <!-- Disable news and interests -->
-                <RunSynchronousCommand wcm:action="add">
-                    <Order>3</Order>
-                    <Path>reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Dsh" /v AllowNewsAndInterests /t REG_DWORD /d 0 /f</Path>
-                </RunSynchronousCommand>
-                <!-- Disable Teams chat auto-install -->
-                <RunSynchronousCommand wcm:action="add">
-                    <Order>4</Order>
-                    <Path>reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Communications" /v ConfigureChatAutoInstall /t REG_DWORD /d 0 /f</Path>
-                </RunSynchronousCommand>
-            </RunSynchronous>
-        </component>
+			<RunSynchronous>
+				<!-- Enable Long Paths -->
+				<SynchronousCommand wcm:action="add">
+					<Order>1</Order>
+					<Path>
+						reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
+					</Path>
+					<Description>Enable Long Paths</Description>
+				</SynchronousCommand>
+				<!-- Set password to never Expire -->
+				<SynchronousCommand wcm:action="add">
+					<Order>2</Order>
+					<Path>
+						net.exe account /maxpwage:unlimited
+					</Path>
+					<Description>Set password to never expire</Description>
+				</SynchronousCommand>
+				<!-- Disable News and Interests -->
+				<SynchronousCommand wcm:action="add">
+					<Order>3</Order>
+					<Path>
+						reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Dsh" /v AllowNewsAndInterests /t REG_DWORD /d 0 /f
+					</Path>
+					<Description>Disable News and Interests</Description>
+				</SynchronousCommand>
+				<!-- Disable Teams Chat auto-install -->
+				<SynchronousCommand wcm:action="add">
+					<Order>4</Order>
+					<Path>
+						reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Communications" /v ConfigureChatAutoInstall /t REG_DWORD /d 0 /f
+					</Path>
+					<Description>Disable Teams Chat auto-install</Description>
+				</SynchronousCommand>
+				<!-- Remove Cortana -->
+				<SynchronousCommand wcm:action="add">
+					<Order>5</Order>
+					<Path>
+						reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer" /v "NoCortana" /t REG_DWORD /d 1 /f
+					</Path>
+					<Description>Remove Cortana</Description>
+				</SynchronousCommand>
+				<!-- Disable Cortana (modern policy) -->
+				<SynchronousCommand wcm:action="add">
+					<Order>6</Order>
+					<Path>reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search" /v AllowCortana /t REG_DWORD /d 0 /f</Path>
+					<Description>Disable Cortana</Description>
+				</SynchronousCommand>
+				<!-- Disable Telemetry -->
+				<SynchronousCommand wcm:action="add">
+					<Order>7</Order>
+					<Path>
+						reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
+					</Path>
+					<Description>Disable Telemetry</Description>
+				</SynchronousCommand>
+				<!-- Disable Telemetry -->
+				<SynchronousCommand wcm:action="add">
+					<Order>8</Order>
+					<Path>
+						reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
+					</Path>
+					<Description>Disable Telemetry</Description>
+				</SynchronousCommand>
+				<!-- Disable Customer Experience Improvement Program -->
+				<SynchronousCommand wcm:action="add">
+					<Order>9</Order>
+					<Path>
+						reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\SQMClient\Windows" /v CEIPEnable /t REG_DWORD /d 0 /f
+					</Path>
+					<Description>Disable Customer Experience Improvement Program</Description>
+				</SynchronousCommand>
+			</RunSynchronous>
+		</component>
     </settings>
 
-    <!-- ============================================ -->
-    <!-- AUDIT SYSTEM PASS -->
-    <!-- Runs during audit mode (if enabled) -->
-    <!-- ============================================ -->
     <settings pass="auditSystem"></settings>
-
-    <!-- ============================================ -->
-    <!-- AUDIT USER PASS -->
-    <!-- Runs during audit mode user setup (if enabled) -->
-    <!-- ============================================ -->
     <settings pass="auditUser"></settings>
 
-    <!-- ============================================ -->
-    <!-- OOBE SYSTEM PASS -->
-    <!-- Runs during Out-of-Box Experience (OOBE) -->
-    <!-- This is where your custom user account is created -->
-    <!-- ============================================ -->
     <settings pass="oobeSystem">
         <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
-            <!-- ============================================ -->
-            <!-- USER ACCOUNT CREATION -->
-            <!-- Creates local user account with custom credentials -->
-            <!-- ============================================ -->
-            <UserAccounts>
-                <LocalAccounts>
-                    <LocalAccount wcm:action="add">
-                        <Name>DummyUser</Name>
-                        <DisplayName>DummyComputer</DisplayName>
-                        <Group>UserSelection</Group>
-                        <Password>
-                            <Value>DummyPassword123!</Value>
-                            <PlainText>true</PlainText>
-                        </Password>
-                    </LocalAccount>
-                </LocalAccounts>
-            </UserAccounts>
-
-            <!-- ============================================ -->
-            <!-- AUTO-LOGIN CONFIGURATION -->
-            <!-- Automatically logs in the user after setup -->
-            <!-- ============================================ -->
-            <AutoLogon>
-                <Username>DummyUser</Username>
-                <Enabled>true</Enabled>
-                <LogonCount>1</LogonCount>
-                <Password>
-                    <Value>DummyPassword123!</Value>
-                    <PlainText>true</PlainText>
-                </Password>
-            </AutoLogon>
-
-            <!-- ============================================ -->
-            <!-- OOBE CONFIGURATION -->
-            <!-- Customizes the Out-of-Box Experience -->
-            <!-- ============================================ -->
-            <OOBE>
-                <!-- Skip privacy settings (set to most private) -->
-                <ProtectYourPC>3</ProtectYourPC>
-                <!-- Hide EULA page -->
-                <HideEULAPage>true</HideEULAPage>
-                <!-- Hide wireless setup -->
-                <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
-                <!-- Hide online account setup -->
-                <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
-            </OOBE>
-
-            <!-- ============================================ -->
-            <!-- FIRST LOGON COMMANDS -->
-            <!-- Runs when user first logs in after setup -->
-            <!-- ALL DEBLOATING HAPPENS HERE FOR SYSPREP /OOBE -->
-            <!-- ============================================ -->
-            <FirstLogonCommands>
-                <!-- Remove bloatware packages -->
-                <SynchronousCommand wcm:action="add">
-                    <Order>1</Order>
-                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "$packages = @('Microsoft.Microsoft3DViewer','Microsoft.BingSearch','Microsoft.WindowsCamera','Clipchamp.Clipchamp','Microsoft.549981C3F5F10','Microsoft.Windows.DevHome','MicrosoftCorporationII.MicrosoftFamily','Microsoft.WindowsFeedbackHub','Microsoft.Edge.GameAssist','Microsoft.GetHelp','Microsoft.Getstarted','microsoft.windowscommunicationsapps','Microsoft.WindowsMaps','Microsoft.MixedReality.Portal','Microsoft.BingNews','Microsoft.WindowsNotepad','Microsoft.MicrosoftOfficeHub','Microsoft.Office.OneNote','Microsoft.OutlookForWindows','Microsoft.MSPaint','Microsoft.People','Microsoft.PowerAutomateDesktop','MicrosoftCorporationII.QuickAssist','Microsoft.SkypeApp','Microsoft.MicrosoftSolitaireCollection','Microsoft.MicrosoftStickyNotes','MicrosoftTeams','MSTeams','Microsoft.Todos','Microsoft.WindowsSoundRecorder','Microsoft.Wallet','Microsoft.BingWeather','Microsoft.Xbox.TCUI','Microsoft.XboxApp','Microsoft.XboxGameOverlay','Microsoft.XboxGamingOverlay','Microsoft.XboxIdentityProvider','Microsoft.XboxSpeechToTextOverlay','Microsoft.GamingApp','Microsoft.ZuneMusic','Microsoft.ZuneVideo'); foreach($pkg in $packages) { try { Get-AppxProvisionedPackage -Online | Where-Object DisplayName -eq $pkg | Remove-AppxProvisionedPackage -Online -AllUsers -ErrorAction Stop; Write-Host \"Removed: $pkg\" } catch { Write-Host \"Failed: $pkg\" } }"</CommandLine>
-                </SynchronousCommand>
-
-                <!-- Remove Windows capabilities -->
-                <SynchronousCommand wcm:action="add">
-                    <Order>2</Order>
-                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "$caps = @('Print.Fax.Scan','Language.Handwriting','Browser.InternetExplorer','MathRecognizer','OneCoreUAP.OneSync','OpenSSH.Client','App.Support.QuickAssist','Language.Speech','Language.TextToSpeech','App.StepsRecorder','Hello.Face.18967','Hello.Face.Migration.18967','Hello.Face.20134','Media.WindowsMediaPlayer','Microsoft.Windows.WordPad'); foreach($cap in $caps) { try { Get-WindowsCapability -Online | Where-Object {($_.Name -split '~')[0] -eq $cap -and $_.State -notin @('NotPresent','Removed')} | Remove-WindowsCapability -Online -ErrorAction Stop; Write-Host \"Removed capability: $cap\" } catch { Write-Host \"Failed capability: $cap\" } }"</CommandLine>
-                </SynchronousCommand>
-
-                <!-- Disable optional features -->
-                <SynchronousCommand wcm:action="add">
-                    <Order>3</Order>
-                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "$features = @('MediaPlayback','MicrosoftWindowsPowerShellV2Root','Microsoft-RemoteDesktopConnection','Recall'); foreach($feature in $features) { try { $f = Get-WindowsOptionalFeature -Online -FeatureName $feature -ErrorAction SilentlyContinue; if($f -and $f.State -notin @('Disabled','DisabledWithPayloadRemoved')) { Disable-WindowsOptionalFeature -Online -FeatureName $feature -Remove -NoRestart -ErrorAction Stop; Write-Host \"Disabled feature: $feature\" } } catch { Write-Host \"Failed feature: $feature\" } }"</CommandLine>
-                </SynchronousCommand>
-
-                <!-- Configure UI settings -->
-                <SynchronousCommand wcm:action="add">
-                    <Order>4</Order>
-                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "reg add 'HKCU\Software\Microsoft\Windows\CurrentVersion\Search' /v SearchboxTaskbarMode /t REG_DWORD /d 0 /f; reg add 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' /v ShowTaskViewButton /t REG_DWORD /d 0 /f; reg add 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' /v TaskbarAl /t REG_DWORD /d 0 /f; reg add 'HKCU\Software\Policies\Microsoft\Windows\Explorer' /v DisableSearchBoxSuggestions /t REG_DWORD /d 1 /f"</CommandLine>
-                </SynchronousCommand>
-
-                <!-- Remove Copilot -->
-                <SynchronousCommand wcm:action="add">
-                    <Order>5</Order>
-                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "try { Get-AppxPackage -Name 'Microsoft.Windows.Ai.Copilot.Provider' | Remove-AppxPackage -ErrorAction Stop; reg add 'HKCU\Software\Policies\Microsoft\Windows\WindowsCopilot' /v TurnOffWindowsCopilot /t REG_DWORD /d 1 /f; Write-Host 'Copilot removed' } catch { Write-Host 'Copilot removal failed' }"</CommandLine>
-                </SynchronousCommand>
-
-                <!-- Configure Start menu -->
-                <SynchronousCommand wcm:action="add">
-                    <Order>6</Order>
-                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "$json = '{\"pinnedList\":[]}'; if([System.Environment]::OSVersion.Version.Build -ge 20000) { $key = 'HKLM\SOFTWARE\Microsoft\PolicyManager\current\device\Start'; reg add \"$key\" /v ConfigureStartPins /t REG_SZ /d \"$json\" /f }"</CommandLine>
-                </SynchronousCommand>
-
-                <!-- Disable automatic app installations and OneDrive -->
-                <SynchronousCommand wcm:action="add">
-                    <Order>7</Order>
-                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "reg add 'HKCU\Software\Microsoft\Windows\CurrentVersion\GameDVR' /v AppCaptureEnabled /t REG_DWORD /d 0 /f; reg add 'HKCU\Software\Microsoft\Notepad' /v ShowStoreBanner /t REG_DWORD /d 0 /f; reg delete 'HKCU\Software\Microsoft\Windows\CurrentVersion\Run' /v OneDriveSetup /f 2>$null"</CommandLine>
-                </SynchronousCommand>
-
-                <!-- Clean up installation files -->
-                <SynchronousCommand wcm:action="add">
-                    <Order>8</Order>
-                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "reg add 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' /v AutoLogonCount /t REG_DWORD /d 0 /f; try { Remove-Item -Path 'C:\Windows.old' -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item -Path 'C:\Windows\Panther\unattend.xml' -Force -ErrorAction SilentlyContinue } catch { }"</CommandLine>
-                </SynchronousCommand>
-
-                <!-- Restart Explorer to apply changes -->
-                <SynchronousCommand wcm:action="add">
-                    <Order>9</Order>
-                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "Get-Process -Name 'explorer' -ErrorAction SilentlyContinue | Where-Object {$_.SessionId -eq (Get-Process -Id $PID).SessionId} | Stop-Process -Force"</CommandLine>
-                </SynchronousCommand>
-            </FirstLogonCommands>
-        </component>
+			<UserAccounts>
+				<LocalAccounts>
+					<LocalAccount wcm:action="add">
+						<Name>DummyUser</Name>
+						<DisplayName>DummyComputer</DisplayName>
+						<Group>UserSelection</Group>
+						<Password>
+							<Value>DummyPassword123!</Value>
+							<PlainText>true</PlainText>
+						</Password>
+					</LocalAccount>
+				</LocalAccounts>
+			</UserAccounts>
+			<AutoLogon>
+				<Enabled>true</Enabled>
+				<Username>DummyUser</Username>
+				<Password>
+					<Value>DummyPassword123!</Value>
+					<PlainText>true</PlainText>
+				</Password>
+				<LogonCount>1</LogonCount>
+			</AutoLogon>
+			<OOBE>
+				<HideEULAPage>true</HideEULAPage>
+				<ProtectYourPC>3</ProtectYourPC>
+				<HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+				<HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+			</OOBE>
+			<FirstLogonCommands>
+				<SynchronousCommand wcm:action="add">
+					<Order>1</Order>
+					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Write-Host 'First logon script executed.'; pause"</CommandLine>
+					<Description>Test PowerShell Visibility</Description>
+				</SynchronousCommand>
+			</FirstLogonCommands>
+		</component>
     </settings>
 </unattend>
