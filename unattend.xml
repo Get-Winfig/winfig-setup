@@ -150,8 +150,8 @@ Notes:
 			<FirstLogonCommands>
 				<SynchronousCommand wcm:action="add">
 					<Order>1</Order>
-					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Write-Host 'First logon script executed.'; pause"</CommandLine>
-					<Description>Test PowerShell Visibility</Description>
+					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/RemovePackages.ps1" | Invoke-Expression'; pause"</CommandLine>
+					<Description>Remove Unwanted/Bloatware Packages</Description>
 				</SynchronousCommand>
 			</FirstLogonCommands>
 		</component>
