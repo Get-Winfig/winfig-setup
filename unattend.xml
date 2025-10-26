@@ -144,7 +144,7 @@ Notes:
 			<OOBE>
 				<HideEULAPage>true</HideEULAPage>
 				<ProtectYourPC>3</ProtectYourPC>
-				<HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+				<HideWirelessSetupInOOBE>false</HideWirelessSetupInOOBE>
 				<HideOnlineAccountScreens>true</HideOnlineAccountScreens>
 			</OOBE>
 			<FirstLogonCommands>
@@ -163,6 +163,19 @@ Notes:
 					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Verb RunAs -Command "Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/SetStartPins.ps1" | Invoke-Expression'; pause"</CommandLine>
 					<Description>Set Start Menu Pins</Description>
 				</SynchronousCommand>
+				<SynchronousCommand wcm:action="add">
+					<Order>4</Order>
+					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process powershell -Verb RunAs -ArgumentList '-WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command &quot;reg add HKCU\Software\Microsoft\Windows\CurrentVersion\GameDVR /v AppCaptureEnabled /t REG_DWORD /d 0 /f; reg add HKCU\Software\Microsoft\Notepad /v ShowStoreBanner /t REG_DWORD /d 0 /f; reg delete HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v OneDriveSetup /f 2&gt;$null&quot;'"</CommandLine>
+					<Description>Apply Registry Tweaks with Admin Privileges</Description>
+				</SynchronousCommand>
+				<SynchronousCommand wcm:action="add">
+                    <Order>5</Order>
+                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "reg add 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' /v AutoLogonCount /t REG_DWORD /d 0 /f; try { Remove-Item -Path 'C:\Windows.old' -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item -Path 'C:\Windows\Panther\unattend.xml' -Force -ErrorAction SilentlyContinue } catch { }"</CommandLine>
+                </SynchronousCommand>
+				<SynchronousCommand wcm:action="add">
+                    <Order>6</Order>
+                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "Get-Process -Name 'explorer' -ErrorAction SilentlyContinue | Where-Object {$_.SessionId -eq (Get-Process -Id $PID).SessionId} | Stop-Process -Force"</CommandLine>
+                </SynchronousCommand>
 			</FirstLogonCommands>
 		</component>
     </settings>
