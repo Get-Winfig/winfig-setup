@@ -150,8 +150,13 @@ Notes:
 			<FirstLogonCommands>
 				<SynchronousCommand wcm:action="add">
 					<Order>1</Order>
-					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/RemovePackages.ps1" | Invoke-Expression'; pause"</CommandLine>
+					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Verb RunAs -Command "Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/RemovePackages.ps1" | Invoke-Expression'; pause"</CommandLine>
 					<Description>Remove Unwanted/Bloatware Packages</Description>
+				</SynchronousCommand>
+				<SynchronousCommand wcm:action="add">
+					<Order>2</Order>
+					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Verb RunAs -Command "Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/RemoveCapabilities.ps1" | Invoke-Expression'; pause"</CommandLine>
+					<Description>Remove Unwanted Windows Capabilities</Description>
 				</SynchronousCommand>
 			</FirstLogonCommands>
 		</component>
