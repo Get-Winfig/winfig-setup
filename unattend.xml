@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 Unattended Windows 11 installation configuration.
-Version: 2.0.0
+Version: 2.1.0
 Author: Armoghan-ul-Mohmin
 Purpose:
 - Automate a repeatable, zero‑touch Windows 11 deployment.
@@ -126,7 +126,7 @@ Notes:
 						<DisplayName>DummyComputer</DisplayName>
 						<Group>UserSelection</Group>
 						<Password>
-							<Value>DummyPassword123!</Value>
+							<Value></Value>
 							<PlainText>true</PlainText>
 						</Password>
 					</LocalAccount>
@@ -136,7 +136,7 @@ Notes:
 				<Enabled>true</Enabled>
 				<Username>DummyUser</Username>
 				<Password>
-					<Value>DummyPassword123!</Value>
+					<Value></Value>
 					<PlainText>true</PlainText>
 				</Password>
 				<LogonCount>1</LogonCount>
@@ -150,32 +150,52 @@ Notes:
 			<FirstLogonCommands>
 				<SynchronousCommand wcm:action="add">
 					<Order>1</Order>
-					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Verb RunAs -Command "Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/RemovePackages.ps1" | Invoke-Expression'; pause"</CommandLine>
-					<Description>Remove Unwanted/Bloatware Packages</Description>
+					<CommandLine>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
+						"New-Item -Path 'C:\Windows\Winfig-Setup' -ItemType Directory -Force | Out-Null; ^
+						$urls = @(
+							'https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/RemovePackages.ps1',
+							'https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/RemoveCapabilities.ps1',
+							'https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/SetStartPins.ps1'
+						); ^
+						foreach ($u in $urls) { ^
+							$name = Split-Path $u -Leaf; ^
+							$path = Join-Path 'C:\Windows\Winfig-Setup' $name; ^
+							Invoke-WebRequest -Uri $u -UseBasicParsing -OutFile $path; ^
+							(Get-Content $path -Raw) | Out-File $path -Encoding UTF8; ^
+						}"
+					</CommandLine>
+					<Description>Download and UTF-8 Encode Winfig Setup Scripts</Description>
 				</SynchronousCommand>
 				<SynchronousCommand wcm:action="add">
 					<Order>2</Order>
-					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Verb RunAs -Command "Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/RemoveCapabilities.ps1" | Invoke-Expression'; pause"</CommandLine>
-					<Description>Remove Unwanted Windows Capabilities</Description>
+					<CommandLine>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File C:\Windows\Winfig-Setup\RemovePackages.ps1; pause'"</CommandLine>
+					<Description>Remove Unwanted/Bloatware Packages</Description>
 				</SynchronousCommand>
 				<SynchronousCommand wcm:action="add">
 					<Order>3</Order>
-					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Verb RunAs -Command "Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Get-Winfig/winfig-setup/main/Scripts/SetStartPins.ps1" | Invoke-Expression'; pause"</CommandLine>
-					<Description>Set Start Menu Pins</Description>
+					<CommandLine>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File C:\Windows\Winfig-Setup\RemoveCapabilities.ps1; pause'"</CommandLine>
+					<Description>Remove Unwanted Windows Capabilities</Description>
 				</SynchronousCommand>
 				<SynchronousCommand wcm:action="add">
 					<Order>4</Order>
+					<CommandLine>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File C:\Windows\Winfig-Setup\SetStartPins.ps1; pause'"</CommandLine>
+					<Description>Set Start Menu Pins</Description>
+				</SynchronousCommand>
+				<SynchronousCommand wcm:action="add">
+					<Order>5</Order>
 					<CommandLine>cmd.exe /c powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process powershell -Verb RunAs -ArgumentList '-WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command &quot;reg add HKCU\Software\Microsoft\Windows\CurrentVersion\GameDVR /v AppCaptureEnabled /t REG_DWORD /d 0 /f; reg add HKCU\Software\Microsoft\Notepad /v ShowStoreBanner /t REG_DWORD /d 0 /f; reg delete HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v OneDriveSetup /f 2&gt;$null&quot;'"</CommandLine>
 					<Description>Apply Registry Tweaks with Admin Privileges</Description>
 				</SynchronousCommand>
 				<SynchronousCommand wcm:action="add">
-                    <Order>5</Order>
-                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "reg add 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' /v AutoLogonCount /t REG_DWORD /d 0 /f; try { Remove-Item -Path 'C:\Windows.old' -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item -Path 'C:\Windows\Panther\unattend.xml' -Force -ErrorAction SilentlyContinue } catch { }"</CommandLine>
-                </SynchronousCommand>
+					<Order>6</Order>
+					<CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "reg add 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' /v AutoLogonCount /t REG_DWORD /d 0 /f; try { Remove-Item -Path 'C:\Windows.old' -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item -Path 'C:\Windows\Panther\unattend.xml' -Force -ErrorAction SilentlyContinue } catch { }"</CommandLine>
+					<Description>Cleanup Winlogon and Unattend Files</Description>
+				</SynchronousCommand>
 				<SynchronousCommand wcm:action="add">
-                    <Order>6</Order>
-                    <CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "Get-Process -Name 'explorer' -ErrorAction SilentlyContinue | Where-Object {$_.SessionId -eq (Get-Process -Id $PID).SessionId} | Stop-Process -Force"</CommandLine>
-                </SynchronousCommand>
+					<Order>7</Order>
+					<CommandLine>powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "Get-Process -Name 'explorer' -ErrorAction SilentlyContinue | Where-Object { $_.SessionId -eq (Get-Process -Id $PID).SessionId } | Stop-Process -Force"</CommandLine>
+					<Description>Restart Explorer</Description>
+				</SynchronousCommand>
 			</FirstLogonCommands>
 		</component>
     </settings>

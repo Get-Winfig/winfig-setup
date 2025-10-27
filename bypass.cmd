@@ -61,13 +61,6 @@ if "%USERNAME%"=="" (
     exit /b 1
 )
 
-:: PASSWORD
-set /p PASSWORD="Enter password: "
-if "!PASSWORD!"=="" (
-    echo %COLOR_WARN%[!] No password entered. Aborting.%COLOR_RESET%
-    exit /b 1
-)
-
 :: DISPLAY NAME
 set /p DISPLAY="Enter Display name: "
 if "!DISPLAY!"=="" (
@@ -93,14 +86,19 @@ REM Save inputs to JSON file
 echo %COLOR_INFO%[i] Saving configuration to JSON file...%COLOR_RESET%
 echo { > config.json
 echo   "username": "!USERNAME!", >> config.json
-echo   "password": "!PASSWORD!", >> config.json
 echo   "displayname": "!DISPLAY!", >> config.json
 echo   "group": "!GROUP!" >> config.json
 echo } >> config.json
 
 REM Use PowerShell to read JSON and replace all values at once
 echo %COLOR_INFO%[i] Processing replacements...%COLOR_RESET%
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$config = Get-Content 'config.json' | ConvertFrom-Json; $content = Get-Content 'unattend.xml' -Raw; $content = $content -replace 'DummyUser', $config.username; $content = $content -replace 'DummyComputer', $config.displayname; $content = $content -replace 'DummyPassword123!', $config.password; $content = $content -replace 'UserSelection', $config.group; Set-Content 'unattend.xml' $content -Encoding UTF8"
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$config = Get-Content 'config.json' | ConvertFrom-Json; " ^
+    "$content = Get-Content 'unattend.xml' -Raw; " ^
+    "$content = $content -replace 'DummyUser', $config.username; " ^
+    "$content = $content -replace 'DummyComputer', $config.displayname; " ^
+    "$content = $content -replace 'UserSelection', $config.group; " ^
+    "Set-Content 'unattend.xml' $content -Encoding UTF8"
 
 if %ERRORLEVEL% NEQ 0 (
     echo %COLOR_ERR%[x] Replacement processing failed.%COLOR_RESET%
@@ -122,11 +120,9 @@ echo %COLOR_INFO%[i] Values entered:%COLOR_RESET%
 echo %COLOR_OK%    Username: %COLOR_RESET%!USERNAME!
 echo %COLOR_OK%    Display : %COLOR_RESET%!DISPLAY!
 echo %COLOR_OK%    Group   : %COLOR_RESET%!GROUP!
-echo %COLOR_OK%    Password: %COLOR_RESET%!PASSWORD!
 echo.
 
 findstr /C:"!USERNAME!" unattend.xml >nul || (echo %COLOR_ERR%[x] Username not found.%COLOR_RESET% & exit /b 1)
-findstr /C:"!PASSWORD!" unattend.xml >nul || (echo %COLOR_ERR%[x] Password not found.%COLOR_RESET% & exit /b 1)
 findstr /C:"!DISPLAY!" unattend.xml >nul || (echo %COLOR_ERR%[x] Display name not found.%COLOR_RESET% & exit /b 1)
 findstr /C:"!GROUP!" unattend.xml >nul || (echo %COLOR_ERR%[x] Group not found.%COLOR_RESET% & exit /b 1)
 echo %COLOR_OK%[+] Verification passed — all values correctly replaced%COLOR_RESET%
