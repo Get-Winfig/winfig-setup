@@ -7,6 +7,11 @@
     ============================================
 #>
 
+# Set UTF-8 with BOM Encoding for Output
+$utf8withBom = New-Object System.Text.UTF8Encoding $true
+$OutputEncoding = [System.Text.UTF8Encoding]::new($true)
+[Console]::OutputEncoding = $utf8withBom
+
 # Create log directory
 $LogDir = "C:\Winfig-Logs"
 if (!(Test-Path $LogDir)) {

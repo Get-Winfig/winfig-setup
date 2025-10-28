@@ -9,6 +9,11 @@
 #   Safe for debloating and improving system performance.
 # =================================================================
 
+#  Set UTF-8 with BOM Encoding for Output
+$utf0withBom = New-Object System.Text.UTF8Encoding $true
+$OutputEncoding = [System.Text.UTF8Encoding]::new($true)
+[Console]::OutputEncoding = $utf0withBom
+
 # Create log directory
 $LogDir = "C:\Winfig-Logs"
 if (-not (Test-Path $LogDir)) {
@@ -148,6 +153,6 @@ foreach ($cap in $Capabilities) {
 }
 
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host ("[✓] Process completed!  Removed: {0} | Failed: {1} | Total: {2}" -f $removed, $failed, $total) -ForegroundColor Yellow
+Write-Host ("Process completed!  Removed: {0} | Failed: {1} | Total: {2}" -f $removed, $failed, $total) -ForegroundColor Yellow
 Write-Host "[i] Log file saved at: $LogFile" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan

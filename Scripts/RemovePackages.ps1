@@ -7,6 +7,10 @@ Purpose: Clean, transparent, and interactive bloatware remover
 ============================================================
 #>
 
+#  Set UTF-8 with BOM Encoding for Output
+$utf0withBom = New-Object System.Text.UTF8Encoding $true
+$OutputEncoding = [System.Text.UTF8Encoding]::new($true)
+[Console]::OutputEncoding = $utf0withBom
 
 # Create log file
 $LogFile = "C:\Winfig-Logs\Debloat.log"
