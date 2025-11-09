@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+
+Unattended Windows 11 installation configuration.
+Version: 1.0.0
+Author: Armoghan-ul-Mohmin
+Purpose:
+- Automate a repeatable, zero‑touch Windows 11 deployment.
+
+Contents:
+- Local user account creation and initial account settings.
+- OOBE (Out‑Of‑Box Experience) customization and privacy/telemetry defaults.
+- First‑login provisioning scripts for post‑install cleanup and package removal (debloat).
+- Registry changes and UI customizations (taskbar, Explorer, etc.).
+- Performance and security optimizations.
+- Removal or disablement of unwanted services and optional Windows features.
+
+Notes:
+- Validate all changes in a test environment before production use.
+- Maintain backups of original configuration and document environment‑specific adjustments.
+- Registry edits and component removals may affect system behavior and updates; proceed with caution.
+-->
+
+<unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+
+    <settings pass="windowsPE">
+        <component name="Microsoft-Windows-Setup">
+			<UserData>
+				<ProductKey>VK7JG-NPHTM-C97JM-9MPGT-3V66T
+					<WillShowUI>OnError</WillShowUI>
+				</ProductKey>
+				<AcceptEula>true</AcceptEula>
+			</UserData>
+			<UseConfigurationSet>false</UseConfigurationSet>
+		</component>
+    </settings>
+
+    <settings pass="offlineServicing"></settings>
+    <settings pass="generalize"></settings>
+
+    <settings pass="specialize">
+        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <RunSynchronous>
+                <!-- Enable Long Paths -->
+                <RunSynchronousCommand>
+                    <Order>1</Order>
+                    <Path>reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f</Path>
+                    <Description>Enable Long Paths</Description>
+                </RunSynchronousCommand>
+
+                <!-- Set password to never Expire -->
+                <RunSynchronousCommand>
+                    <Order>2</Order>
+                    <Path>wmic useraccount where name='Administrator' set PasswordExpires=False</Path>
+                    <Description>Set Administrator password to never expire</Description>
+                </RunSynchronousCommand>
+
+                <!-- Disable News and Interests -->
+                <RunSynchronousCommand>
+                    <Order>3</Order>
+                    <Path>reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds" /v EnableFeeds /t REG_DWORD /d 0 /f</Path>
+                    <Description>Disable News and Interests</Description>
+                </RunSynchronousCommand>
+
+                <!-- Disable Teams Chat auto-install -->
+                <RunSynchronousCommand>
+                    <Order>4</Order>
+                    <Path>reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Teams" /v IsTeamsAutoInstallDisabled /t REG_DWORD /d 1 /f</Path>
+                    <Description>Disable Teams Chat auto-install</Description>
+                </RunSynchronousCommand>
+
+                <!-- Remove Cortana -->
+                <RunSynchronousCommand>
+                    <Order>5</Order>
+                    <Path>powershell -Command "Get-AppxPackage -allusers Microsoft.549981C3F5F10 | Remove-AppxPackage; Get-AppxProvisionedPackage -online | Where-Object {$_.PackageName -like 'Microsoft.549981C3F5F10*'} | Remove-AppxProvisionedPackage -online"</Path>
+                    <Description>Remove Cortana</Description>
+                </RunSynchronousCommand>
+
+                <!-- Disable Cortana (modern policy) -->
+                <RunSynchronousCommand>
+                    <Order>6</Order>
+                    <Path>reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search" /v AllowCortana /t REG_DWORD /d 0 /f</Path>
+                    <Description>Disable Cortana (modern policy)</Description>
+                </RunSynchronousCommand>
+
+                <!-- Disable Telemetry -->
+                <RunSynchronousCommand>
+                    <Order>7</Order>
+                    <Path>reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f</Path>
+                    <Description>Disable Telemetry</Description>
+                </RunSynchronousCommand>
+
+                <!-- Disable Customer Experience Improvement Program -->
+                <RunSynchronousCommand>
+                    <Order>8</Order>
+                    <Path>reg add "HKLM\SOFTWARE\Policies\Microsoft\SQMClient\Windows" /v CEIPEnable /t REG_DWORD /d 0 /f</Path>
+                    <Description>Disable Customer Experience Improvement Program</Description>
+                </RunSynchronousCommand>
+
+                <!-- Disable Windows Error Reporting -->
+                <RunSynchronousCommand>
+                    <Order>9</Order>
+                    <Path>reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Error Reporting" /v DisableWER /t REG_DWORD /d 1 /f</Path>
+                    <Description>Disable Windows Error Reporting</Description>
+                </RunSynchronousCommand>
+            </RunSynchronous>
+        </component>
+    </settings>
+
+    <settings pass="auditSystem"></settings>
+    <settings pass="auditUser"></settings>
+
+    <settings pass="oobeSystem">
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+				<ProtectYourPC>3</ProtectYourPC>
+                <SkipMachineOOBE>true</SkipMachineOOBE>
+                <SkipUserOOBE>true</SkipUserOOBE>
+				<HideWirelessSetupInOOBE>false</HideWirelessSetupInOOBE>
+				<HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+                <SkipFirstLoginAnimation>true</SkipFirstLoginAnimation>
+                <DisableFirstLogonAnimation>true</DisableFirstLogonAnimation>
+            </OOBE>
+
+            <UserAccounts>
+                <LocalAccounts>
+                    <LocalAccount wcm:action="add">
+                        <Name>DummyUser</Name>
+						<DisplayName>DummyComputer</DisplayName>
+						<Group>UserSelection</Group>
+						<Password>
+							<Value></Value>
+							<PlainText>true</PlainText>
+						</Password>
+                    </LocalAccount>
+                </LocalAccounts>
+
+                <AutoLogon>
+                    <Enabled>true</Enabled>
+                    <Username>DummyUser</Username>
+                    <Password>
+                        <Value></Value>
+                        <PlainText>true</PlainText>
+                    </Password>
+                    <LogonCount>1</LogonCount>
+                </AutoLogon>
+            </UserAccounts>
+        </component>
+    </settings>
+</unattend>
