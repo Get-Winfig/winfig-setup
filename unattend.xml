@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <!--
 
 Unattended Windows 11 installation configuration.
@@ -21,21 +20,17 @@ Notes:
 - Maintain backups of original configuration and document environment‑specific adjustments.
 - Registry edits and component removals may affect system behavior and updates; proceed with caution.
 -->
-
 <unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
-
     <settings pass="windowsPE">
         <component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
-			<UserData>
-				<ProductKey>
-					<Key>VK7JG-NPHTM-C97JM-9MPGT-3V66T</Key>
-					<WillShowUI>OnError</WillShowUI>
-				</ProductKey>
-				<AcceptEula>true</AcceptEula>
-			</UserData>
-
-			<UseConfigurationSet>false</UseConfigurationSet>
-
+            <UserData>
+                <ProductKey>
+                    <Key>VK7JG-NPHTM-C97JM-9MPGT-3V66T</Key>
+                    <WillShowUI>OnError</WillShowUI>
+                </ProductKey>
+                <AcceptEula>true</AcceptEula>
+            </UserData>
+            <UseConfigurationSet>false</UseConfigurationSet>
             <RunSynchronous>
                 <!-- Bypass TPM Check -->
                 <RunSynchronousCommand>
@@ -43,35 +38,30 @@ Notes:
                     <Path>reg.exe add "HKLM\SYSTEM\Setup\LabConfig" /v BypassTPMCheck /t REG_DWORD /d 1 /f</Path>
                     <Description>Bypass TPM Check</Description>
                 </RunSynchronousCommand>
-
                 <!-- Bypass Secure Boot Check -->
                 <RunSynchronousCommand>
                     <Order>2</Order>
                     <Path>reg.exe add "HKLM\SYSTEM\Setup\LabConfig" /v BypassSecureBootCheck /t REG_DWORD /d 1 /f</Path>
                     <Description>Bypass Secure Boot Check</Description>
                 </RunSynchronousCommand>
-
                 <!-- Bypass Storage Check -->
                 <RunSynchronousCommand>
                     <Order>3</Order>
                     <Path>reg.exe add "HKLM\SYSTEM\Setup\LabConfig" /v BypassStorageCheck /t REG_DWORD /d 1 /f</Path>
                     <Description>Bypass Storage Check</Description>
                 </RunSynchronousCommand>
-
                 <!-- Bypass CPU Check -->
                 <RunSynchronousCommand>
                     <Order>4</Order>
                     <Path>reg.exe add "HKLM\SYSTEM\Setup\LabConfig" /v BypassCPUCheck /t REG_DWORD /d 1 /f</Path>
                     <Description>Bypass CPU Check</Description>
                 </RunSynchronousCommand>
-
                 <!-- Bypass RAM Check -->
                 <RunSynchronousCommand>
                     <Order>5</Order>
                     <Path>reg.exe add "HKLM\SYSTEM\Setup\LabConfig" /v BypassRAMCheck /t REG_DWORD /d 1 /f</Path>
                     <Description>Bypass RAM Check</Description>
                 </RunSynchronousCommand>
-
                 <!-- Bypass Disk Check -->
                 <RunSynchronousCommand>
                     <Order>6</Order>
@@ -79,12 +69,8 @@ Notes:
                     <Description>Bypass Disk Check</Description>
                 </RunSynchronousCommand>
             </RunSynchronous>
-		</component>
+        </component>
     </settings>
-
-    <settings pass="offlineServicing"></settings>
-    <settings pass="generalize"></settings>
-
     <settings pass="specialize">
         <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
             <RunSynchronous>
@@ -94,106 +80,91 @@ Notes:
                     <Path>reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f</Path>
                     <Description>Enable Long Paths</Description>
                 </RunSynchronousCommand>
-
                 <!-- Set password to never Expire -->
                 <RunSynchronousCommand>
                     <Order>2</Order>
                     <Path>wmic useraccount where name='Administrator' set PasswordExpires=False</Path>
                     <Description>Set Administrator password to never expire</Description>
                 </RunSynchronousCommand>
-
                 <!-- Disable News and Interests -->
                 <RunSynchronousCommand>
                     <Order>3</Order>
                     <Path>reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds" /v EnableFeeds /t REG_DWORD /d 0 /f</Path>
                     <Description>Disable News and Interests</Description>
                 </RunSynchronousCommand>
-
                 <!-- Disable Teams Chat auto-install -->
                 <RunSynchronousCommand>
                     <Order>4</Order>
                     <Path>reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Teams" /v IsTeamsAutoInstallDisabled /t REG_DWORD /d 1 /f</Path>
                     <Description>Disable Teams Chat auto-install</Description>
                 </RunSynchronousCommand>
-
                 <!-- Remove Cortana -->
                 <RunSynchronousCommand>
                     <Order>5</Order>
                     <Path>powershell -Command "Get-AppxPackage -allusers Microsoft.549981C3F5F10 | Remove-AppxPackage; Get-AppxProvisionedPackage -online | Where-Object {$_.PackageName -like 'Microsoft.549981C3F5F10*'} | Remove-AppxProvisionedPackage -online"</Path>
                     <Description>Remove Cortana</Description>
                 </RunSynchronousCommand>
-
                 <!-- Disable Cortana (modern policy) -->
                 <RunSynchronousCommand>
                     <Order>6</Order>
                     <Path>reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search" /v AllowCortana /t REG_DWORD /d 0 /f</Path>
                     <Description>Disable Cortana (modern policy)</Description>
                 </RunSynchronousCommand>
-
                 <!-- Disable Telemetry -->
                 <RunSynchronousCommand>
                     <Order>7</Order>
                     <Path>reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f</Path>
                     <Description>Disable Telemetry</Description>
                 </RunSynchronousCommand>
-
                 <!-- Disable Customer Experience Improvement Program -->
                 <RunSynchronousCommand>
                     <Order>8</Order>
                     <Path>reg add "HKLM\SOFTWARE\Policies\Microsoft\SQMClient\Windows" /v CEIPEnable /t REG_DWORD /d 0 /f</Path>
                     <Description>Disable Customer Experience Improvement Program</Description>
                 </RunSynchronousCommand>
-
                 <!-- Disable Windows Error Reporting -->
                 <RunSynchronousCommand>
                     <Order>9</Order>
                     <Path>reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Error Reporting" /v DisableWER /t REG_DWORD /d 1 /f</Path>
                     <Description>Disable Windows Error Reporting</Description>
                 </RunSynchronousCommand>
-
-				<!-- Create temp copy of unattend.xml -->
-				<RunSynchronousCommand>
-					<Order>10</Order>
-					<Path>cmd.exe /c copy "C:\Windows\Panther\unattend.xml" "C:\Windows\Panther\unattend-temp.xml"</Path>
-					<Description>Create temp copy of unattend.xml</Description>
-				</RunSynchronousCommand>
-
+                <!-- Create temp copy of unattend.xml -->
+                <RunSynchronousCommand>
+                    <Order>10</Order>
+                    <Path>cmd.exe /c copy "C:\Windows\Panther\unattend.xml" "C:\Windows\Panther\unattend-temp.xml"</Path>
+                    <Description>Create temp copy of unattend.xml</Description>
+                </RunSynchronousCommand>
                 <!-- Innitialize Custom Powershell Scripts -->
                 <RunSynchronousCommand>
                     <Order>11</Order>
                     <Path>powershell.exe -WindowStyle Normal -NoProfile -Command "$xml = [xml]::new(); $xml.Load('C:\Windows\Panther\unattend-temp.xml'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"</Path>
                     <Description>Initialize Custom Powershell Scripts</Description>
                 </RunSynchronousCommand>
-
                 <!-- Run Specialize.ps1 -->
                 <RunSynchronousCommand>
                     <Order>12</Order>
                     <Path>powershell.exe -WindowStyle Normal -NoProfile -Command "Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\Specialize.ps1' -Raw | Invoke-Expression;"</Path>
                     <Description>Run Specialize.ps1</Description>
                 </RunSynchronousCommand>
-
                 <!-- Loads the Default User’s registry hive -->
                 <RunSynchronousCommand>
                     <Order>13</Order>
                     <Path>reg.exe load "HKU\DefaultUser" "C:\Users\Default\NTUSER.DAT"</Path>
                     <Description>Load Default User registry hive</Description>
                 </RunSynchronousCommand>
-
                 <!-- Run DefaultUser.ps1 -->
                 <RunSynchronousCommand>
                     <Order>14</Order>
                     <Path>powershell.exe -WindowStyle Normal -NoProfile -Command "Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\DefaultUser.ps1' -Raw | Invoke-Expression;"</Path>
                     <Description>Run DefaultUser.ps1</Description>
                 </RunSynchronousCommand>
-
                 <!-- Unloads the Default User registry hive -->
                 <RunSynchronousCommand>
                     <Order>15</Order>
                     <Path>reg.exe unload "HKU\DefaultUser"</Path>
                     <Description>Unload Default User registry hive</Description>
                 </RunSynchronousCommand>
-
-				<!-- Cleanup temp file -->
+                <!-- Cleanup temp file -->
                 <RunSynchronousCommand>
                     <Order>16</Order>
                     <Path>cmd.exe /c del "C:\Windows\Panther\unattend-temp.xml"</Path>
@@ -202,38 +173,30 @@ Notes:
             </RunSynchronous>
         </component>
     </settings>
-
-    <settings pass="auditSystem"></settings>
-    <settings pass="auditUser"></settings>
-
     <settings pass="oobeSystem">
         <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
             <UserAccounts>
                 <LocalAccounts>
                     <LocalAccount wcm:action="add">
                         <Name>DummyUser</Name>
-						<DisplayName>DummyComputer</DisplayName>
-						<Group>UserSelection</Group>
+                        <DisplayName>DummyComputer</DisplayName>
+                        <Group>UserSelection</Group>
                     </LocalAccount>
                 </LocalAccounts>
-
-                <AutoLogon>
-                    <Enabled>true</Enabled>
-                    <Username>DummyUser</Username>
-                    <LogonCount>1</LogonCount>
-                </AutoLogon>
             </UserAccounts>
-
+            <AutoLogon>
+                <Enabled>true</Enabled>
+                <Username>DummyUser</Username>
+                <LogonCount>1</LogonCount>
+            </AutoLogon>
             <OOBE>
                 <HideEULAPage>true</HideEULAPage>
                 <ProtectYourPC>3</ProtectYourPC>
-                <SkipMachineOOBE>true</SkipMachineOOBE>
-                <SkipUserOOBE>true</SkipUserOOBE>
                 <HideWirelessSetupInOOBE>false</HideWirelessSetupInOOBE>
+                <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
             </OOBE>
         </component>
     </settings>
-
     <Extensions xmlns="https://schneegans.de/windows/unattend-generator/">
         <ExtractScript>
 param(
@@ -252,7 +215,6 @@ foreach( $file in $Document.unattend.Extensions.File ) {
     [System.IO.File]::WriteAllBytes( $path, $bytes );
 }
         </ExtractScript>
-
         <File path="C:\Windows\Setup\Scripts\RemovePackages.ps1">
 $selectors = @(
 	'Microsoft.Microsoft3DViewer';
@@ -334,7 +296,6 @@ $logfile = 'C:\Windows\Setup\Scripts\RemovePackages.log';
 	}
 } *&gt;&amp;1 | Out-String -Stream &gt;&gt; $logfile;
         </File>
-
         <File path="C:\Windows\Setup\Scripts\RemoveCapabilities.ps1">
 $selectors = @(
 	'Print.Fax.Scan';
@@ -391,7 +352,6 @@ $logfile = 'C:\Windows\Setup\Scripts\RemoveCapabilities.log';
 	}
 } *&gt;&amp;1 | Out-String -Stream &gt;&gt; $logfile;
         </File>
-
         <File path="C:\Windows\Setup\Scripts\RemoveFeatures.ps1">
 $selectors = @(
 	'MediaPlayback';
@@ -441,7 +401,6 @@ $logfile = 'C:\Windows\Setup\Scripts\RemoveFeatures.log';
 	}
 } *&gt;&amp;1 | Out-String -Stream &gt;&gt; $logfile;
         </File>
-
         <File path="C:\Windows\Setup\Scripts\TaskbarLayoutModification.xml">
 &lt;LayoutModificationTemplate xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification" xmlns:defaultlayout="http://schemas.microsoft.com/Start/2014/FullDefaultLayout" xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout" xmlns:taskbar="http://schemas.microsoft.com/Start/2014/TaskbarLayout" Version="1"&gt;
 	&lt;CustomTaskbarLayoutCollection PinListPlacement="Replace"&gt;
@@ -453,7 +412,6 @@ $logfile = 'C:\Windows\Setup\Scripts\RemoveFeatures.log';
 	&lt;/CustomTaskbarLayoutCollection&gt;
 &lt;/LayoutModificationTemplate&gt;
         </File>
-
         <File path="C:\Windows\Setup\Scripts\UnlockStartLayout.vbs">
 HKU = &amp;H80000003
 Set reg = GetObject("winmgmts://./root/default:StdRegProv")
@@ -471,7 +429,6 @@ If reg.EnumKey(HKU, "", sids) = 0 Then
 	End If
 End If
         </File>
-
         <File path="C:\Windows\Setup\Scripts\UnlockStartLayout.xml">
 &lt;Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task"&gt;
 	&lt;Triggers&gt;
@@ -513,7 +470,6 @@ End If
 	&lt;/Actions&gt;
 &lt;/Task&gt;
         </File>
-
         <File path="C:\Windows\Setup\Scripts\MakeEdgeUninstallable.ps1">
 $ErrorActionPreference = 'Stop';
 &amp; {
@@ -534,7 +490,6 @@ $ErrorActionPreference = 'Stop';
 	}
 } *&gt;&amp;1 | Out-String -Stream &gt;&gt; 'C:\Windows\Setup\Scripts\MakeEdgeUninstallable.log';
         </File>
-
         <File path="C:\Windows\Setup\Scripts\SetStartPins.ps1">
 $json = '{"pinnedList":[]}';
 if( [System.Environment]::OSVersion.Version.Build -lt 20000 ) {
@@ -544,7 +499,6 @@ $key = 'Registry::HKLM\SOFTWARE\Microsoft\PolicyManager\current\device\Start';
 New-Item -Path $key -ItemType 'Directory' -ErrorAction 'SilentlyContinue';
 Set-ItemProperty -LiteralPath $key -Name 'ConfigureStartPins' -Value $json -Type 'String';
         </File>
-
         <File path="C:\Windows\Setup\Scripts\Specialize.ps1">
 $scripts = @(
 	{
@@ -647,7 +601,6 @@ $scripts = @(
   }
 } *&gt;&amp;1 | Out-String -Stream &gt;&gt; "C:\Windows\Setup\Scripts\Specialize.log";
         </File>
-
         <File path="C:\Windows\Setup\Scripts\UserOnce.ps1">
 $scripts = @(
 	{
@@ -718,7 +671,6 @@ $scripts = @(
   }
 } *&gt;&amp;1 | Out-String -Stream &gt;&gt; "$env:TEMP\UserOnce.log";
         </File>
-
         <File path="C:\Windows\Setup\Scripts\DefaultUser.ps1">
 $scripts = @(
 	{
@@ -805,4 +757,5 @@ $scripts = @(
 } *&gt;&amp;1 | Out-String -Stream &gt;&gt; "C:\Windows\Setup\Scripts\DefaultUser.log";
         </File>
     </Extensions>
+    <cpi:offlineImage cpi:source="wim:f:/github/get-winfig/install.wim#Windows 11 Pro" xmlns:cpi="urn:schemas-microsoft-com:cpi" />
 </unattend>

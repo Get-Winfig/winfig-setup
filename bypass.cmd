@@ -222,17 +222,17 @@ if /I "%SYSPREP%"=="Y" (
     echo %COLOR_INFO%[i] Starting Sysprep process...%COLOR_RESET%
     echo %COLOR_WARN%[!] System will reboot automatically when complete%COLOR_RESET%
     echo %COLOR_INFO%[i] Running Sysprep... please wait.%COLOR_RESET%
-    %WINDIR%\System32\Sysprep\Sysprep.exe /generalize /oobe /unattend:C:\Windows\Panther\unattend.xml /reboot
+    %WINDIR%\System32\Sysprep\Sysprep.exe /oobe /unattend:C:\Windows\Panther\unattend.xml /reboot
 ) else if /I "%SYSPREP%"=="N" (
     echo %COLOR_INFO%[i] Sysprep cancelled by user%COLOR_RESET%
     echo %COLOR_OK%[+] Configuration files are ready. You can run Sysprep manually later:%COLOR_RESET%
-    echo %COLOR_INFO%    %WINDIR%\System32\Sysprep\Sysprep.exe /generalize /oobe /unattend:C:\Windows\Panther\unattend.xml /reboot%COLOR_RESET%
+    echo %COLOR_INFO%    %WINDIR%\System32\Sysprep\Sysprep.exe /oobe /unattend:C:\Windows\Panther\unattend.xml /reboot%COLOR_RESET%
     echo.
     pause
 ) else (
     echo %COLOR_WARN%[!] Invalid input. Sysprep cancelled for safety%COLOR_RESET%
     echo %COLOR_OK%[+] Configuration files are ready. You can run Sysprep manually later:%COLOR_RESET%
-    echo %COLOR_INFO%    %WINDIR%\System32\Sysprep\Sysprep.exe /generalize /oobe /unattend:C:\Windows\Panther\unattend.xml /reboot%COLOR_RESET%
+    echo %COLOR_INFO%    %WINDIR%\System32\Sysprep\Sysprep.exe /oobe /unattend:C:\Windows\Panther\unattend.xml /reboot%COLOR_RESET%
     echo.
     pause
 )
