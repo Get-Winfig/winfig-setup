@@ -208,6 +208,21 @@ Notes:
 
     <settings pass="oobeSystem">
         <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <UserAccounts>
+                <LocalAccounts>
+                    <LocalAccount wcm:action="add">
+                        <Name>DummyUser</Name>
+						<DisplayName>DummyComputer</DisplayName>
+						<Group>UserSelection</Group>
+                    </LocalAccount>
+                </LocalAccounts>
+
+                <AutoLogon>
+                    <Enabled>true</Enabled>
+                    <Username>DummyUser</Username>
+                    <LogonCount>1</LogonCount>
+                </AutoLogon>
+            </UserAccounts>
 
             <OOBE>
                 <HideEULAPage>true</HideEULAPage>
@@ -216,30 +231,6 @@ Notes:
                 <SkipUserOOBE>true</SkipUserOOBE>
                 <HideWirelessSetupInOOBE>false</HideWirelessSetupInOOBE>
             </OOBE>
-
-            <UserAccounts>
-                <LocalAccounts>
-                    <LocalAccount wcm:action="add">
-                        <Name>DummyUser</Name>
-						<DisplayName>DummyComputer</DisplayName>
-						<Group>UserSelection</Group>
-						<Password>
-							<Value></Value>
-							<PlainText>true</PlainText>
-						</Password>
-                    </LocalAccount>
-                </LocalAccounts>
-
-                <AutoLogon>
-                    <Enabled>true</Enabled>
-                    <Username>DummyUser</Username>
-                    <Password>
-                        <Value></Value>
-                        <PlainText>true</PlainText>
-                    </Password>
-                    <LogonCount>1</LogonCount>
-                </AutoLogon>
-            </UserAccounts>
         </component>
     </settings>
 
