@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+Unattended Windows 11 installation configuration.
+Version: 1.0.0
+Author: Armoghan-ul-Mohmin
+Purpose:
+- Automate a repeatable, zero‑touch Windows 11 deployment.
+
+Contents:
+- Local user account creation and initial account settings.
+- OOBE (Out‑Of‑Box Experience) customization and privacy/telemetry defaults.
+- First‑login provisioning scripts for post‑install cleanup and package removal (debloat).
+- Registry changes and UI customizations (taskbar, Explorer, etc.).
+- Performance and security optimizations.
+- Removal or disablement of unwanted services and optional Windows features.
+
+Notes:
+- Validate all changes in a test environment before production use.
+- Maintain backups of original configuration and document environment‑specific adjustments.
+- Registry edits and component removals may affect system behavior and updates; proceed with caution.
+-->
+<unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+    <settings pass="windowsPE">
+		<component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<UserData>
+                <ProductKey>
+                    <Key>VK7JG-NPHTM-C97JM-9MPGT-3V66T</Key>
+                    <WillShowUI>OnError</WillShowUI>
+                </ProductKey>
+                <AcceptEula>true</AcceptEula>
+            </UserData>
+
+            <UseConfigurationSet>false</UseConfigurationSet>
+
+            <RunSynchronous>
+				<!-- Bypass TPM Check -->
+                <RunSynchronousCommand>
+                    <Order>1</Order>
+                    <Path>reg.exe add "HKLM\SYSTEM\Setup\LabConfig" /v BypassTPMCheck /t REG_DWORD /d 1 /f</Path>
+                    <Description>Bypass TPM Check</Description>
+                </RunSynchronousCommand>
+
+				<!-- Bypass Secure Boot Check -->
+                <RunSynchronousCommand>
+                    <Order>2</Order>
+                    <Path>reg.exe add "HKLM\SYSTEM\Setup\LabConfig" /v BypassSecureBootCheck /t REG_DWORD /d 1 /f</Path>
+                    <Description>Bypass Secure Boot Check</Description>
+                </RunSynchronousCommand>
+
+				<!-- Bypass Storage Check -->
+                <RunSynchronousCommand>
+                    <Order>3</Order>
+                    <Path>reg.exe add "HKLM\SYSTEM\Setup\LabConfig" /v BypassStorageCheck /t REG_DWORD /d 1 /f</Path>
+                    <Description>Bypass Storage Check</Description>
+                </RunSynchronousCommand>
+
+				<!-- Bypass CPU Check -->
+                <RunSynchronousCommand>
+                    <Order>4</Order>
+                    <Path>reg.exe add "HKLM\SYSTEM\Setup\LabConfig" /v BypassCPUCheck /t REG_DWORD /d 1 /f</Path>
+                    <Description>Bypass CPU Check</Description>
+                </RunSynchronousCommand>
+
+				<!-- Bypass RAM Check -->
+                <RunSynchronousCommand>
+                    <Order>5</Order>
+                    <Path>reg.exe add "HKLM\SYSTEM\Setup\LabConfig" /v BypassRAMCheck /t REG_DWORD /d 1 /f</Path>
+                    <Description>Bypass RAM Check</Description>
+                </RunSynchronousCommand>
+
+				<!-- Bypass Disk Check -->
+                <RunSynchronousCommand>
+                    <Order>6</Order>
+                    <Path>reg.exe add "HKLM\SYSTEM\Setup\LabConfig" /v BypassDiskCheck /t REG_DWORD /d 1 /f</Path>
+                    <Description>Bypass Disk Check</Description>
+                </RunSynchronousCommand>
+            </RunSynchronous>
+        </component>
+    </settings>
+
+    <settings pass="specialize">
+        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <RunSynchronous>
+				<!-- Create temp copy of unattend.xml -->
+                <RunSynchronousCommand>
+                    <Order>10</Order>
+                    <Path>cmd.exe /c copy "C:\Windows\Panther\unattend.xml" "C:\Windows\Panther\unattend-temp.xml"</Path>
+                    <Description>Create temp copy of unattend.xml</Description>
+                </RunSynchronousCommand>
+
+				<!-- Innitialize Custom Powershell Scripts -->
+                <RunSynchronousCommand>
+                    <Order>11</Order>
+                    <Path>powershell.exe -WindowStyle Normal -NoProfile -Command "$xml = [xml]::new(); $xml.Load('C:\Windows\Panther\unattend-temp.xml'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"</Path>
+                    <Description>Initialize Custom Powershell Scripts</Description>
+                </RunSynchronousCommand>
+
+				<!-- Cleanup temp file -->
+                <RunSynchronousCommand>
+                    <Order>16</Order>
+                    <Path>cmd.exe /c del "C:\Windows\Panther\unattend-temp.xml"</Path>
+                    <Description>Remove temporary unattend file</Description>
+                </RunSynchronousCommand>
+            </RunSynchronous>
+        </component>
+    </settings>
+
+	<settings pass="oobeSystem">
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<UserAccounts>
+                <LocalAccounts>
+                    <LocalAccount wcm:action="add">
+                        <Name>DummyUser</Name>
+                        <DisplayName>DummyComputer</DisplayName>
+                        <Group>UserSelection</Group>
+						<Password>
+							<Value></Value>
+							<PlainText>true</PlainText>
+						</Password>
+                    </LocalAccount>
+                </LocalAccounts>
+            </UserAccounts>
+
+            <AutoLogon>
+                <Enabled>true</Enabled>
+                <Username>DummyUser</Username>
+                <LogonCount>1</LogonCount>
+				<Password>
+					<Value></Value>
+					<PlainText>true</PlainText>
+				</Password>
+            </AutoLogon>
+
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+                <ProtectYourPC>3</ProtectYourPC>
+                <HideWirelessSetupInOOBE>false</HideWirelessSetupInOOBE>
+                <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+            </OOBE>
+
+			<FirstLogonCommands>
+
+				<!-- Create temp copy of unattend.xml -->
+                <SynchronousCommand wcm:action="add">
+                    <Order>10</Order>
+                    <CommandLine>cmd.exe /c copy "C:\Windows\Panther\unattend.xml" "C:\Windows\Panther\unattend-temp.xml"</CommandLine>
+                    <Description>Create temp copy of unattend.xml</Description>
+                </SynchronousCommand>
+
+				<!-- Innitialize Custom Powershell Scripts -->
+                <SynchronousCommand wcm:action="add">
+                    <Order>11</Order>
+                    <CommandLine>powershell.exe -WindowStyle Normal -NoProfile -Command "$xml = [xml]::new(); $xml.Load('C:\Windows\Panther\unattend-temp.xml'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"</CommandLine>
+                    <Description>Initialize Custom Powershell Scripts</Description>
+                </SynchronousCommand>
+
+				<!-- Cleanup temp file -->
+                <SynchronousCommand wcm:action="add">
+                    <Order>16</Order>
+                    <CommandLine>cmd.exe /c del "C:\Windows\Panther\unattend-temp.xml"</CommandLine>
+                    <Description>Remove temporary unattend file</Description>
+                </SynchronousCommand>
+
+				<!-- Run FirstLogon.ps1 -->
+				<SynchronousCommand wcm:action="add">
+					<Order>17</Order>
+					<CommandLine>powershell.exe -WindowStyle Normal -NoProfile -Command "Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\FirstLogon.ps1' -Raw | Invoke-Expression;"</CommandLine>
+					<Description>Run FirstLogon.ps1</Description>
+				</SynchronousCommand>
+
+				<!-- Prompt User To Setup a Password -->
+				<SynchronousCommand wcm:action="add">
+					<Order>18</Order>
+					<CommandLine>mshta.exe "javascript:var shell=new ActiveXObject('WScript.Shell');shell.Popup('Your account is not protected with a password. Please set one up in Windows Settings to secure your data.\n\nTo set up a password:\n• Open Settings → Accounts\n• Click Sign-in options\n• Click Add under Password\n• Follow the setup instructions\n\nThis message will close automatically in 10 seconds.',10,'🔒 Security Warning - Password Required',48);close()"</CommandLine>
+					<Description>Prompt User To Setup a Password</Description>
+				</SynchronousCommand>
+
+				<!-- Automatically Restart -->
+				<SynchronousCommand wcm:action="add">
+					<Order>19</Order>
+					<CommandLine>powershell.exe -WindowStyle Hidden -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('System will restart in 10 seconds to apply final configuration changes. Please save any work.','System Restart','OK','Warning'); Start-Sleep 10; shutdown.exe /r /t 0 /f /d p:0:0 /c 'Restarting to apply final configuration changes...'"</CommandLine>
+					<Description>Show restart warning and then restart</Description>
+				</SynchronousCommand>
+            </FirstLogonCommands>
+        </component>
+    </settings>
+
+    <Extensions xmlns="https://schneegans.de/windows/unattend-generator/">
+        <ExtractScript>
+param(
+    [xml] $Document
+);
+
+foreach( $file in $Document.unattend.Extensions.File ) {
+    $path = [System.Environment]::ExpandEnvironmentVariables( $file.GetAttribute( 'path' ) );
+    mkdir -Path( $path | Split-Path -Parent ) -ErrorAction 'SilentlyContinue';
+    $encoding = switch( [System.IO.Path]::GetExtension( $path ) ) {
+        { $_ -in '.ps1', '.xml' } { [System.Text.Encoding]::UTF8; }
+        { $_ -in '.reg', '.vbs', '.js' } { [System.Text.UnicodeEncoding]::new( $false, $true ); }
+        default { [System.Text.Encoding]::Default; }
+    };
+    $bytes = $encoding.GetPreamble() + $encoding.GetBytes( $file.InnerText.Trim() );
+    [System.IO.File]::WriteAllBytes( $path, $bytes );
+}
+        </ExtractScript>
+
+        <File path="C:\Windows\Setup\Scripts\VMwareTools.ps1">
+&amp; {
+	foreach( $letter in 'DEFGHIJKLMNOPQRSTUVWXYZ'.ToCharArray() ) {
+		$exe = "${letter}:\setup.exe";
+		if( ( Get-Item -LiteralPath $exe -ErrorAction 'SilentlyContinue' | Select-Object -ExpandProperty 'VersionInfo' | Select-Object -ExpandProperty 'ProductName' ) -eq 'VMware Tools' ) {
+			Start-Process -FilePath $exe -ArgumentList '/s /v /qn REBOOT=R' -Wait;
+			return;
+		}
+	}
+	'VMware Tools image (windows.iso) is not attached to this VM.';
+} *&gt;&amp;1 | Out-String -Stream &gt;&gt; 'C:\Windows\Setup\Scripts\VMwareTools.log';
+        </File>
+
+        <File path="C:\Windows\Setup\Scripts\FirstLogon.ps1">
+$scripts = @(
+	{
+		Set-ItemProperty -LiteralPath 'Registry::HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name 'AutoLogonCount' -Type 'DWord' -Force -Value 0;
+	};
+	{
+		Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\VMwareTools.ps1' -Raw | Invoke-Expression;
+	};
+	{
+		Remove-Item -LiteralPath @(
+		  'C:\Windows\Panther\unattend.xml';
+		  'C:\Windows\Panther\unattend-original.xml';
+		  'C:\Windows\Setup\Scripts\Wifi.xml';
+		) -Force -ErrorAction 'SilentlyContinue' -Verbose;
+	};
+);
+
+&amp; {
+  [float] $complete = 0;
+  [float] $increment = 100 / $scripts.Count;
+  foreach( $script in $scripts ) {
+    Write-Progress -Activity 'Running scripts to finalize your Windows installation. Do not close this window.' -PercentComplete $complete;
+    '*** Will now execute command &#xAB;{0}&#xBB;.' -f $(
+      $str = $script.ToString().Trim() -replace '\s+', ' ';
+      $max = 100;
+      if( $str.Length -le $max ) {
+        $str;
+      } else {
+        $str.Substring( 0, $max - 1 ) + '&#x2026;';
+      }
+    );
+    $start = [datetime]::Now;
+    &amp; $script;
+    '*** Finished executing command after {0:0} ms.' -f [datetime]::Now.Subtract( $start ).TotalMilliseconds;
+    "`r`n" * 3;
+    $complete += $increment;
+  }
+} *&gt;&amp;1 | Out-String -Stream &gt;&gt; "C:\Windows\Setup\Scripts\FirstLogon.log";
+        </File>
+    </Extensions>
+</unattend>
