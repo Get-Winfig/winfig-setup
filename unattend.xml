@@ -343,17 +343,24 @@ Notes:
                     <Description>Remove temporary unattend file</Description>
                 </SynchronousCommand>
 
-				<!-- Prompt User To Setup a Password -->
+				<!-- Run FirstLogon.ps1 -->
 				<SynchronousCommand wcm:action="add">
 					<Order>17</Order>
+					<CommandLine>powershell.exe -WindowStyle Normal -NoProfile -Command "Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\FirstLogon.ps1' -Raw | Invoke-Expression;"</CommandLine>
+					<Description>Run FirstLogon.ps1</Description>
+				</SynchronousCommand>
+
+				<!-- Prompt User To Setup a Password -->
+				<SynchronousCommand wcm:action="add">
+					<Order>18</Order>
 					<CommandLine>mshta.exe "javascript:var shell=new ActiveXObject('WScript.Shell');shell.Popup('Your account is not protected with a password. Please set one up in Windows Settings to secure your data.\n\nTo set up a password:\n• Open Settings → Accounts\n• Click Sign-in options\n• Click Add under Password\n• Follow the setup instructions\n\nThis message will close automatically in 10 seconds.',10,'🔒 Security Warning - Password Required',48);close()"</CommandLine>
 					<Description>Prompt User To Setup a Password</Description>
 				</SynchronousCommand>
 
 				<!-- Automatically Restart -->
 				<SynchronousCommand wcm:action="add">
-					<Order>18</Order>
-					<CommandLine>mshta.exe "javascript:var shell=new ActiveXObject('WScript.Shell');shell.Popup('System will restart in 10 seconds to apply final configuration changes.\n\nPlease save any work and close open applications.',10,'System Restart',64);close()" &amp;&amp; shutdown.exe /r /t 10 /f /d p:0:0 /c "Restarting to apply final configuration changes..."</CommandLine>
+					<Order>19</Order>
+					<CommandLine>powershell.exe -WindowStyle Hidden -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('System will restart in 10 seconds to apply final configuration changes. Please save any work.','System Restart','OK','Warning'); Start-Sleep 10; shutdown.exe /r /t 0 /f /d p:0:0 /c 'Restarting to apply final configuration changes...'"</CommandLine>
 					<Description>Show restart warning and then restart</Description>
 				</SynchronousCommand>
             </FirstLogonCommands>
@@ -930,5 +937,98 @@ $scripts = @(
   }
 } *&gt;&amp;1 | Out-String -Stream &gt;&gt; "C:\Windows\Setup\Scripts\DefaultUser.log";
         </File>
+
+		<File path="C:\Windows\Setup\Scripts\FirstLogon.ps1">
+$scripts = @(
+	{
+		Set-ItemProperty -LiteralPath 'Registry::HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name 'AutoLogonCount' -Type 'DWord' -Force -Value 0;
+	};
+	{
+		cmd.exe /c "rmdir C:\Windows.old";
+	};
+	{
+		Remove-Item -LiteralPath @(
+		  'C:\Windows\Panther\unattend.xml';
+		  'C:\Windows\Panther\unattend-original.xml';
+		  'C:\Windows\Setup\Scripts\Wifi.xml';
+		  '$env:TEMP\*',
+          'C:\Windows\Temp\*',
+          'C:\Windows\Logs\*'
+		) -Force -ErrorAction 'SilentlyContinue' -Verbose;
+	};
+);
+
+&amp; {
+  [float] $complete = 0;
+  [float] $increment = 100 / $scripts.Count;
+  foreach( $script in $scripts ) {
+    Write-Progress -Activity 'Running scripts to finalize your Windows installation. Do not close this window.' -PercentComplete $complete;
+    '*** Will now execute command &#xAB;{0}&#xBB;.' -f $(
+      $str = $script.ToString().Trim() -replace '\s+', ' ';
+      $max = 100;
+      if( $str.Length -le $max ) {
+        $str;
+      } else {
+        $str.Substring( 0, $max - 1 ) + '&#x2026;';
+      }
+    );
+    $start = [datetime]::Now;
+    &amp; $script;
+    '*** Finished executing command after {0:0} ms.' -f [datetime]::Now.Subtract( $start ).TotalMilliseconds;
+    "`r`n" * 3;
+    $complete += $increment;
+  }
+} *&gt;&amp;1 &gt;&gt; "C:\Windows\Setup\Scripts\FirstLogon.log";
+		</File>
+
+		<File path="C:\Windows\Setup\Scripts\DisableWebSearch.ps1">
+$scripts = @(
+	{
+		reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /v "BingSearchEnabled" /t REG_DWORD /d 0 /f;
+		reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /v "CortanaConsent" /t REG_DWORD /d 0 /f;
+		reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /v "AllowSearchToUseLocation" /t REG_DWORD /d 0 /f;
+		reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /v "EnableDynamicContentInWSB" /t REG_DWORD /d 0 /f;
+		reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /v "HistoryViewEnabled" /t REG_DWORD /d 0 /f;
+	};
+	{
+		reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search" /v "DisableWebSearch" /t REG_DWORD /d 1 /f;
+		reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search" /v "ConnectedSearchUseWeb" /t REG_DWORD /d 0 /f;
+		reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search" /v "AllowCortana" /t REG_DWORD /d 0 /f;
+	};
+	{
+		reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\SearchSettings" /v "IsDynamicSearchBoxEnabled" /t REG_DWORD /d 0 /f;
+		reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\SearchSettings" /v "IsMSACloudSearchEnabled" /t REG_DWORD /d 0 /f;
+		reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v "SystemPaneSuggestionsEnabled" /t REG_DWORD /d 0 /f;
+		reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v "SubscribedContent-338388Enabled" /t REG_DWORD /d 0 /f;
+	};
+	{
+		Stop-Process -Name "explorer" -Force -ErrorAction 'SilentlyContinue';
+		Start-Sleep -Seconds 2;
+		Start-Process "explorer.exe";
+	};
+);
+
+&amp; {
+  [float] $complete = 0;
+  [float] $increment = 100 / $scripts.Count;
+  foreach( $script in $scripts ) {
+    Write-Progress -Activity 'Disabling web search in Start Menu. Do not close this window.' -PercentComplete $complete;
+    '*** Will now execute command &#xAB;{0}&#xBB;.' -f $(
+      $str = $script.ToString().Trim() -replace '\s+', ' ';
+      $max = 100;
+      if( $str.Length -le $max ) {
+        $str;
+      } else {
+        $str.Substring( 0, $max - 1 ) + '&#x2026;';
+      }
+    );
+    $start = [datetime]::Now;
+    &amp; $script;
+    '*** Finished executing command after {0:0} ms.' -f [datetime]::Now.Subtract( $start ).TotalMilliseconds;
+    "`r`n" * 3;
+    $complete += $increment;
+  }
+} *&gt;&amp;1 &gt;&gt; "C:\Windows\Setup\Scripts\DisableWebSearch.log";
+		</File>
     </Extensions>
 </unattend>
